@@ -21,9 +21,11 @@ class DismissViewController: UIViewController {
     
     let dimOpactity: CGFloat = 0.35
     let backgroundTopInset: CGFloat = 65
+    let topShadowHeight: CGFloat = 1
     
     class DimmingView: UIView { }
     class TopView: UIView { }
+    class TopShadowView: UIView { }
     class BackgroundView: UIView { }
     
     var contentView: UIView { scrollView.contentView }
@@ -32,7 +34,7 @@ class DismissViewController: UIViewController {
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
     
-    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, topView] }
+    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, topView, topShadowView] }
     
     private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -75,6 +77,15 @@ class DismissViewController: UIViewController {
         return view
     }()
     
+    private(set) lazy var topShadowView: UIView = {
+        let view = TopShadowView()
+        view.isUserInteractionEnabled = false
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .black.withAlphaComponent(0.25)
+        view.alpha = 0
+        return view
+    }()
+    
     private lazy var backgroundView: UIView = {
         let view = BackgroundView(frame: .zero)
         view.backgroundColor = .systemGray
@@ -88,6 +99,7 @@ class DismissViewController: UIViewController {
         view.addSubview(dimmingView)
         view.addSubview(backgroundView)
         view.addSubview(scrollView)
+        view.addSubview(topShadowView)
         view.addSubview(topView)
         
         setupLayoutConstraints()
@@ -111,6 +123,13 @@ class DismissViewController: UIViewController {
             $0.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor)
             
             $0.bottomAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor)
+        }
+        
+        topShadowView.applyConstraints {
+            $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            $0.heightAnchor.constraint(equalToConstant: topShadowHeight)
+            $0.topAnchor.constraint(equalTo: topView.bottomAnchor)
         }
         
         backgroundView.applyConstraints {
@@ -159,7 +178,7 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
             return true
         }
         if isGestureRecognizer(gestureRecognizer, inView: contentView) {
-            if isScrollViewAtTop && isSwipingDown {
+            if isScrollViewAtTop {
                 return true
             }
             return false
@@ -196,6 +215,8 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
         let transform = CGAffineTransform(translationX: 0, y: translation)
         
         if recognizer.state == .ended {
+            startedGestureFromTopView = false
+            
             if velocity > 0 && offset > 0 {
                 animateDismissal(velocity: velocity)
             } else {
@@ -215,7 +236,12 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        // ...
+        let shadowAlpha: CGFloat = scrollView.contentOffset.y > 0 ? 1 : 0
+        if topShadowView.alpha != shadowAlpha {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+                self.topShadowView.alpha = shadowAlpha
+            }
+        }
     }
 }
 
@@ -263,14 +289,18 @@ extension DismissViewController: UIViewControllerAnimatedTransitioning {
             dimmingView.alpha = 0
             viewsToTranslate.forEach { $0.transform = transform }
             
-            UIView.animate(withDuration: fullDuration * 0.35, delay: 0, options: .curveEaseOut) {
+            UIView.animate(withDuration: fullDuration * 0.35, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
                 self.dimmingView.alpha = 1
-            }
-            UIView.animate(withDuration: fullDuration, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0) {
-                self.dimmingView.alpha = 1
-                self.viewsToTranslate.forEach { $0.transform = .identity }
             } completion: { finished in
                 transitionContext.completeTransition(finished)
+            }
+            UIView.animate(
+                withDuration: fullDuration, delay: 0,
+                usingSpringWithDamping: 0.78, initialSpringVelocity: 0,
+                options: .allowUserInteraction
+            ) {
+                self.dimmingView.alpha = 1
+                self.viewsToTranslate.forEach { $0.transform = .identity }
             }
         } else {
             let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn

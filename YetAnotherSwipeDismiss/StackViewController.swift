@@ -13,7 +13,7 @@ class StackViewController: DismissViewController {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.alignment = .fill
-        stackView.distribution = .equalCentering
+        stackView.distribution = .equalSpacing
         stackView.spacing = 20
         return stackView
     }()
@@ -22,6 +22,21 @@ class StackViewController: DismissViewController {
         var configuration = UIButton.Configuration.borderedProminent()
         configuration.title = "Add"
         let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
+            self.addLabel()
+        })
+        return button
+    }()
+    
+    private lazy var addALotButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedProminent()
+        configuration.title = "Add a lot"
+        let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
+            self.addLabel()
+            self.addLabel()
+            self.addLabel()
+            self.addLabel()
+            self.addLabel()
+            self.addLabel()
             self.addLabel()
         })
         return button
@@ -54,6 +69,7 @@ class StackViewController: DismissViewController {
         buttonStackView.extend(to: topContentView.layoutMarginsGuide)
         
         buttonStackView.addArrangedSubview(removeButton)
+        buttonStackView.addArrangedSubview(addALotButton)
         buttonStackView.addArrangedSubview(addButton)
         
         addLabel()
@@ -124,6 +140,9 @@ private extension StackViewController {
         removeButton.isEnabled = true
         
         stackView.addArrangedSubview(label)
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
+            self.scrollView.scrollRectToVisible(label.frame, animated: true)
+        }
     }
     
     func removeLabel() {

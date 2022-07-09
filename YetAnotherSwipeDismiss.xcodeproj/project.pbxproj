@@ -65,16 +65,16 @@
 			isa = PBXGroup;
 			children = (
 				3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */,
+				3E90A8142879B7D300AE01F6 /* BottomAlignedScrollView.swift */,
 				3E90A80C2878922900AE01F6 /* DismissViewController.swift */,
+				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
 				3E90A7F82878921C00AE01F6 /* AppDelegate.swift */,
 				3E90A7FA2878921C00AE01F6 /* SceneDelegate.swift */,
 				3E90A7FC2878921C00AE01F6 /* ViewController.swift */,
-				3E90A8142879B7D300AE01F6 /* BottomAlignedScrollView.swift */,
 				3E90A7FE2878921C00AE01F6 /* Main.storyboard */,
 				3E90A8012878921C00AE01F6 /* Assets.xcassets */,
 				3E90A8032878921C00AE01F6 /* LaunchScreen.storyboard */,
 				3E90A8062878921C00AE01F6 /* Info.plist */,
-				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
 			);
 			path = YetAnotherSwipeDismiss;
 			sourceTree = "<group>";
