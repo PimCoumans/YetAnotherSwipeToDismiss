@@ -28,10 +28,19 @@ class DismissViewController: UIViewController {
     
     var contentView: UIView { scrollView.contentView }
     
-    var startedGestureFromTopView: Bool = false
+    private var startedGestureFromTopView: Bool = false
+    private var dismissGestureVelocity: CGFloat = 0
     
-    private lazy var dismissGestureRecognizer: UIPanGestureRecognizer = {
+    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, topView] }
+    
+    private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
+        recognizer.delegate = self
+        return recognizer
+    }()
+    
+    private lazy var dismissTapGestureRecognizer: UITapGestureRecognizer = {
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleDismissTapGestureRecognizer(recognizer:)))
         recognizer.delegate = self
         return recognizer
     }()
@@ -47,14 +56,13 @@ class DismissViewController: UIViewController {
     private lazy var dimmingView: UIView = {
         let view = DimmingView(frame: self.view.bounds)
         view.backgroundColor = .black.withAlphaComponent(dimOpactity)
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissSelf)))
         return view
     }()
     
     private lazy var topView: UIView = {
         let view = TopView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemGray2
+        view.backgroundColor = .systemGray
         view.layer.cornerRadius = backgroundTopInset / 2
         view.layer.cornerCurve = .continuous
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -93,7 +101,7 @@ class DismissViewController: UIViewController {
         
         contentView.addSubview(dummyContent)
         setupLayoutConstraints()
-        setupScrollBehavior()
+        setupGestureRecognizers()
     }
     
     private func setupLayoutConstraints() {
@@ -124,10 +132,10 @@ class DismissViewController: UIViewController {
         }
     }
     
-    private func setupScrollBehavior() {
+    private func setupGestureRecognizers() {
         view.addGestureRecognizer(scrollView.panGestureRecognizer)
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissSelf)))
-        view.addGestureRecognizer(dismissGestureRecognizer)
+        view.addGestureRecognizer(dismissTapGestureRecognizer)
+        view.addGestureRecognizer(dismissPanGestureRecognizer)
     }
     
     @objc func handleTap(_ recognizer: UITapGestureRecognizer) {
@@ -156,6 +164,10 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
     }
     
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer == dismissTapGestureRecognizer {
+            return !isGestureRecognizer(gestureRecognizer, inView: contentView) && !isGestureRecognizer(gestureRecognizer, inView: topView)
+        }
+        
         guard let panGestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer else {
             return false
         }
@@ -166,11 +178,6 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
         }
         if isGestureRecognizer(gestureRecognizer, inView: contentView) {
             if isScrollViewAtTop && isSwipingDown {
-                let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-                if scrollOffset < 0 {
-                    let translation = panGestureRecognizer.translation(in: contentView).y
-                    panGestureRecognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: contentView)
-                }
                 return true
             }
             return false
@@ -178,24 +185,37 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
         return true
     }
     
+    @objc func handleDismissTapGestureRecognizer(recognizer: UITapGestureRecognizer) {
+        animateDismissal(velocity: 0)
+    }
+    
     @objc func handleDismissGestureRecognizer(recognizer: UIPanGestureRecognizer) {
+        
+        if recognizer.state == .began {
+            // Manually set translation when catching scrollview content while bouncing down
+            let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+            if scrollOffset < 0 {
+                let translation = recognizer.translation(in: contentView).y
+                recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: contentView)
+                scrollView.stopScrolling()
+            }
+        }
+        
         let velocity = recognizer.velocity(in: view).y
-        let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-        let offset = recognizer.translation(in: view).y        
+        let offset = recognizer.translation(in: view).y
         
-        let limitTransform = !startedGestureFromTopView
-        var translation = limitTransform ? max(0, offset) : offset
-        
+        // Only allow gesturing up when starting drag in top view
+        var translation = startedGestureFromTopView ? offset : max(0, offset)
         if translation < 0 {
+            // TODO: Proper rubber banding
             translation *= 0.5
         }
         
         let transform = CGAffineTransform(translationX: 0, y: translation)
-        let translatingViews = [self.scrollView, self.topView, self.backgroundView]
         
         if recognizer.state == .ended {
             if velocity > 0 && offset > 0 {
-                dismissSelf()
+                animateDismissal(velocity: velocity)
             } else {
                 scrollView.bounces = true
                 UIView.animate(
@@ -203,11 +223,11 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
                     usingSpringWithDamping: 0.78, initialSpringVelocity: 0,
                     options: [.beginFromCurrentState, .allowUserInteraction]
                 ) {
-                    translatingViews.forEach { $0.transform = .identity }
+                    self.viewsToTranslate.forEach { $0.transform = .identity }
                 }
             }
         } else {
-            translatingViews.forEach { $0.transform = transform }
+            viewsToTranslate.forEach { $0.transform = transform }
             scrollView.bounces = offset <= 0 || startedGestureFromTopView
         }
     }
@@ -218,7 +238,8 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
 }
 
 private extension DismissViewController {
-    @objc func dismissSelf() {
+    @objc func animateDismissal(velocity: CGFloat = 0) {
+        dismissGestureVelocity = velocity
         presentingViewController?.dismiss(animated: true)
     }
 }
@@ -255,25 +276,30 @@ extension DismissViewController: UIViewControllerAnimatedTransitioning {
         let fullDuration = transitionDuration(using: transitionContext)
         let duration = max(0.15, fullDuration * ((fullOffset / view.bounds.height) * 0.75))
         
-        let translatingViews = [self.scrollView, self.topView, self.backgroundView]
         
         if isBeingPresented {
             dimmingView.alpha = 0
-            translatingViews.forEach { $0.transform = transform }
+            viewsToTranslate.forEach { $0.transform = transform }
             
             UIView.animate(withDuration: fullDuration * 0.35, delay: 0, options: .curveEaseOut) {
                 self.dimmingView.alpha = 1
             }
             UIView.animate(withDuration: fullDuration, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0) {
                 self.dimmingView.alpha = 1
-                translatingViews.forEach { $0.transform = .identity }
+                self.viewsToTranslate.forEach { $0.transform = .identity }
             } completion: { finished in
                 transitionContext.completeTransition(finished)
             }
         } else {
-            UIView.animate(withDuration: duration, delay: 0, options: .curveEaseIn) {
+            let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn
+            let untransformedOffset = scrollView.frame.applying(scrollView.transform.inverted()).minY
+            let transformedOffset = scrollView.frame.minY
+            let distanceToCover = fullOffset - (transformedOffset - untransformedOffset)
+            let dismissDuration = min(duration, distanceToCover / dismissGestureVelocity)
+            
+            UIView.animate(withDuration: dismissDuration, delay: 0, options: options) {
                 self.dimmingView.alpha = 0
-                translatingViews.forEach { $0.transform = transform }
+                self.viewsToTranslate.forEach { $0.transform = transform }
             } completion: { finished in
                 transitionContext.completeTransition(finished)
             }
