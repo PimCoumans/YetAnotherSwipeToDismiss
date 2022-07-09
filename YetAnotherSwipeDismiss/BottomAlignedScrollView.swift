@@ -14,16 +14,9 @@ class BottomAlignedScrollView: UIScrollView {
     }}
     
     class ContentView: UIView { }
-    class BackgroundView: UIView { }
     
     private(set) lazy var contentView: UIView = {
         let view = ContentView(frame: self.bounds)
-        return view
-    }()
-    
-    private lazy var backgroundView: UIView = {
-        let view = BackgroundView(frame: self.bounds)
-        view.backgroundColor = .systemGray
         return view
     }()
     
@@ -32,13 +25,12 @@ class BottomAlignedScrollView: UIScrollView {
         automaticallyAdjustsScrollIndicatorInsets = false
         translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(backgroundView)
         addSubview(contentView)
         
-        setLayoutConstraints()
+        setupLayoutConstraints()
     }
     
-    private func setLayoutConstraints() {
+    private func setupLayoutConstraints() {
         NSLayoutConstraint.add {
             contentView.leadingAnchor.constraint(equalTo: leadingAnchor)
             contentView.trailingAnchor.constraint(equalTo: trailingAnchor)
@@ -53,19 +45,12 @@ class BottomAlignedScrollView: UIScrollView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        // Set top inset so content is aligned to bottom
         let availableArea = frame.inset(by: safeAreaInsets).size
         contentInset.top = max(0, availableArea.height - contentView.bounds.height)
         contentSize.height = contentView.bounds.height
         
-        let bottomInset = safeAreaInsets.bottom
-        let bottomScrollOvershoot = bounds.height - (bounds.maxY + adjustedContentInset.top)
-
-        backgroundView.frame = contentView.frame.inset(by: UIEdgeInsets(
-            top: 0, left: 0,
-            bottom: -bottomInset + bottomScrollOvershoot,
-            right: 0
-        ))
-        
+        // Make top of scroll indicator never extend beyond top of content
         let topScrollOvershoot = min(0, contentOffset.y + adjustedContentInset.top)
         verticalScrollIndicatorInsets = UIEdgeInsets(
             top: adjustedContentInset.top - topScrollOvershoot,

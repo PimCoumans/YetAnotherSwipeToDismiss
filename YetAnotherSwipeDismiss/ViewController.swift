@@ -12,14 +12,20 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        // Do any additional setup after loading the view.
+        
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(presentDismissViewController)))
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        presentDismissViewController()
+    }
+    
+    @objc func presentDismissViewController() {
         
         let viewController = DismissViewController()
         present(viewController, animated: true)
+        
     }
 }
 

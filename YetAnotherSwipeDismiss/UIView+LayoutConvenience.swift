@@ -23,9 +23,9 @@ extension NSLayoutConstraint {
 
 extension UIView {
     
-    func applyConstraints(@NSLayoutConstraint.ConstraintBuilder constraints: () -> [NSLayoutConstraint]) {
+    func applyConstraints(@NSLayoutConstraint.ConstraintBuilder constraints: (UIView) -> [NSLayoutConstraint]) {
         translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.add(constraints: constraints)
+        NSLayoutConstraint.activate(constraints(self))
     }
     
     func withSuperview(_ handler: (UIView) -> Void) {
@@ -37,7 +37,7 @@ extension UIView {
     }
     
     func extend(to view: UIView) {
-        applyConstraints {
+        applyConstraints { _ in
             leadingAnchor.constraint(equalTo: view.leadingAnchor)
             trailingAnchor.constraint(equalTo: view.trailingAnchor)
             topAnchor.constraint(equalTo: view.topAnchor)
@@ -46,7 +46,7 @@ extension UIView {
     }
     
     func extend(to layoutGuide: UILayoutGuide) {
-        applyConstraints {
+        applyConstraints { _ in
             leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor)
             trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor)
             topAnchor.constraint(equalTo: layoutGuide.topAnchor)
@@ -55,7 +55,7 @@ extension UIView {
     }
     
     func center(in view: UIView) {
-        applyConstraints {
+        applyConstraints { _ in
             centerXAnchor.constraint(equalTo: view.centerXAnchor)
             centerYAnchor.constraint(equalTo: view.centerYAnchor)
         }
