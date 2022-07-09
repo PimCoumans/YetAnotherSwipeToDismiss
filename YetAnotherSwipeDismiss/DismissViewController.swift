@@ -27,6 +27,7 @@ class DismissViewController: UIViewController {
     class BackgroundView: UIView { }
     
     var contentView: UIView { scrollView.contentView }
+    var topContentView: UIView { topView }
     
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
@@ -45,7 +46,7 @@ class DismissViewController: UIViewController {
         return recognizer
     }()
     
-    private lazy var scrollView: BottomAlignedScrollView = {
+    private(set) lazy var scrollView: BottomAlignedScrollView = {
         let scrollView = BottomAlignedScrollView(frame: self.view.bounds)
         scrollView.extraTopInset = backgroundTopInset
         scrollView.alwaysBounceVertical = true
@@ -59,11 +60,14 @@ class DismissViewController: UIViewController {
         return view
     }()
     
-    private lazy var topView: UIView = {
+    private(set) lazy var topView: UIView = {
         let view = TopView()
+        let cornerRadius = backgroundTopInset / 2
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .systemGray
-        view.layer.cornerRadius = backgroundTopInset / 2
+        view.directionalLayoutMargins.leading = cornerRadius * 0.8
+        view.directionalLayoutMargins.trailing = cornerRadius * 0.8
+        view.layer.cornerRadius = cornerRadius
         view.layer.cornerCurve = .continuous
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         view.layer.masksToBounds = true
@@ -77,19 +81,6 @@ class DismissViewController: UIViewController {
         return view
     }()
     
-    private lazy var dummyContent: UILabel = {
-        let label = UILabel()
-        label.contentMode = .top
-        label.font = UIFont.systemFont(ofSize: 237)
-        label.text = "1 2 3 4 5 6 7"
-        label.numberOfLines = 0
-        label.lineBreakMode = .byCharWrapping
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(_:))))
-        label.isUserInteractionEnabled = true
-        return label
-    }()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear
@@ -99,14 +90,12 @@ class DismissViewController: UIViewController {
         view.addSubview(scrollView)
         view.addSubview(topView)
         
-        contentView.addSubview(dummyContent)
         setupLayoutConstraints()
         setupGestureRecognizers()
     }
     
     private func setupLayoutConstraints() {
         dimmingView.extendToSuperview()
-        dummyContent.extendToSuperviewSafeArea()
         
         scrollView.applyConstraints {
             $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
@@ -136,13 +125,6 @@ class DismissViewController: UIViewController {
         view.addGestureRecognizer(scrollView.panGestureRecognizer)
         view.addGestureRecognizer(dismissTapGestureRecognizer)
         view.addGestureRecognizer(dismissPanGestureRecognizer)
-    }
-    
-    @objc func handleTap(_ recognizer: UITapGestureRecognizer) {
-        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0, options: []) {
-            self.dummyContent.font = UIFont.systemFont(ofSize: self.randomFontSize)
-            self.view.layoutIfNeeded()
-        }
     }
 }
 

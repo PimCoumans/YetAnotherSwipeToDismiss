@@ -16,6 +16,7 @@
 		3E90A80D2878922900AE01F6 /* DismissViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A80C2878922900AE01F6 /* DismissViewController.swift */; };
 		3E90A8112878967500AE01F6 /* UIView+LayoutConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */; };
 		3E90A8152879B7D300AE01F6 /* BottomAlignedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A8142879B7D300AE01F6 /* BottomAlignedScrollView.swift */; };
+		3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A816287A0EE700AE01F6 /* StackViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		3E90A80C2878922900AE01F6 /* DismissViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissViewController.swift; sourceTree = "<group>"; };
 		3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+LayoutConvenience.swift"; sourceTree = "<group>"; };
 		3E90A8142879B7D300AE01F6 /* BottomAlignedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomAlignedScrollView.swift; sourceTree = "<group>"; };
+		3E90A816287A0EE700AE01F6 /* StackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +74,7 @@
 				3E90A8012878921C00AE01F6 /* Assets.xcassets */,
 				3E90A8032878921C00AE01F6 /* LaunchScreen.storyboard */,
 				3E90A8062878921C00AE01F6 /* Info.plist */,
+				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
 			);
 			path = YetAnotherSwipeDismiss;
 			sourceTree = "<group>";
@@ -150,6 +153,7 @@
 				3E90A7FD2878921C00AE01F6 /* ViewController.swift in Sources */,
 				3E90A8152879B7D300AE01F6 /* BottomAlignedScrollView.swift in Sources */,
 				3E90A80D2878922900AE01F6 /* DismissViewController.swift in Sources */,
+				3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */,
 				3E90A7F92878921C00AE01F6 /* AppDelegate.swift in Sources */,
 				3E90A8112878967500AE01F6 /* UIView+LayoutConvenience.swift in Sources */,
 				3E90A7FB2878921C00AE01F6 /* SceneDelegate.swift in Sources */,

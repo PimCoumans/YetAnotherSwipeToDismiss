@@ -23,7 +23,7 @@ class ViewController: UIViewController {
     
     @objc func presentDismissViewController() {
         
-        let viewController = DismissViewController()
+        let viewController = StackViewController()
         present(viewController, animated: true)
         
     }
