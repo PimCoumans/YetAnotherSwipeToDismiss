@@ -165,24 +165,22 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
     }
     
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        if gestureRecognizer == dismissTapGestureRecognizer {
-            return !isGestureRecognizer(gestureRecognizer, inView: contentView) && !isGestureRecognizer(gestureRecognizer, inView: topView)
-        }
         
-        guard let panGestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer else {
-            return false
-        }
-        let isSwipingDown = panGestureRecognizer.velocity(in: view).y > 0
-        if isGestureRecognizer(gestureRecognizer, inView: topView) {
-            startedGestureFromTopView = true
-            return true
-        }
-        if isGestureRecognizer(gestureRecognizer, inView: contentView) {
-            if isScrollViewAtTop {
+        let gestureInContent = isGestureRecognizer(gestureRecognizer, inView: contentView)
+        let gestureInTopView = isGestureRecognizer(gestureRecognizer, inView: topView)
+        
+        if gestureRecognizer == dismissTapGestureRecognizer {
+            return !gestureInContent && !gestureInTopView
+        } else if gestureRecognizer == dismissPanGestureRecognizer {
+            if gestureInTopView {
+                startedGestureFromTopView = true
                 return true
             }
-            return false
+            if gestureInContent {
+                return isScrollViewAtTop
+            }
         }
+        
         return true
     }
     
