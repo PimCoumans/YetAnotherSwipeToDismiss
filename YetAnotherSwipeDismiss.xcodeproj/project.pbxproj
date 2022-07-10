@@ -47,14 +47,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		3E43E625287AFBB900B2436E /* DismissController */ = {
+		3E43E625287AFBB900B2436E /* PanelController */ = {
 			isa = PBXGroup;
 			children = (
 				3E90A8142879B7D300AE01F6 /* BottomAlignedScrollView.swift */,
 				3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */,
 				3E43E626287AFBD100B2436E /* PanelController.swift */,
 			);
-			path = DismissController;
+			path = PanelController;
 			sourceTree = "<group>";
 		};
 		3E90A7EC2878921C00AE01F6 = {
@@ -76,7 +76,7 @@
 		3E90A7F72878921C00AE01F6 /* YetAnotherSwipeDismiss */ = {
 			isa = PBXGroup;
 			children = (
-				3E43E625287AFBB900B2436E /* DismissController */,
+				3E43E625287AFBB900B2436E /* PanelController */,
 				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
 				3E43E628287B068100B2436E /* SimpleViewController.swift */,
 				3E90A7F82878921C00AE01F6 /* AppDelegate.swift */,
