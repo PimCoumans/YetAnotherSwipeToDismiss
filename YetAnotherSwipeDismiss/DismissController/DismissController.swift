@@ -26,8 +26,12 @@ class DismissController: NSObject {
         setupViewController()
     }}
     
-    var dimOpactity: CGFloat = 0.35 { didSet {
+    var dimOpactity: CGFloat = 0.45 { didSet {
         dimmingView.backgroundColor = UIColor(white: 0, alpha: dimOpactity)
+    }}
+    
+    var topShadowOpactity: CGFloat = 0.15 { didSet {
+        topShadowView.backgroundColor = UIColor(white: 0, alpha: topShadowOpactity)
     }}
     
     let backgroundTopInset: CGFloat = 65
@@ -80,7 +84,7 @@ class DismissController: NSObject {
         let view = TopView()
         let cornerRadius = backgroundTopInset / 2
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemGray
+        view.backgroundColor = .lightGray
         view.directionalLayoutMargins.leading = cornerRadius * 0.8
         view.directionalLayoutMargins.trailing = cornerRadius * 0.8
         view.layer.cornerRadius = cornerRadius
@@ -95,14 +99,14 @@ class DismissController: NSObject {
         let view = TopShadowView()
         view.isUserInteractionEnabled = false
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .black.withAlphaComponent(0.25)
+        view.backgroundColor = UIColor(white: 0, alpha: topShadowOpactity)
         view.alpha = 0
         return view
     }()
     
     private lazy var backgroundView: UIView = {
         let view = BackgroundView(frame: .zero)
-        view.backgroundColor = .systemGray
+        view.backgroundColor = .lightGray
         return view
     }()
     
