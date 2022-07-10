@@ -148,11 +148,6 @@ private extension StackViewController {
     }
     
     func animateChanges(with animation: (() -> Void)? = nil, completion: (() -> Void)? = nil) {
-        guard !isBeingPresented && !isBeingDismissed else {
-            view.setNeedsLayout()
-            view.layoutIfNeeded()
-            return
-        }
         UIView.animate(withDuration: 0.55, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: .allowUserInteraction) {
             self.stackView.arrangedSubviews.forEach { if !$0.isHidden { $0.alpha = 1 } }
             animation?()
