@@ -102,11 +102,11 @@ class DismissViewController: UIViewController {
         view.addSubview(topShadowView)
         view.addSubview(topView)
         
-        setupLayoutConstraints()
         setupGestureRecognizers()
     }
     
-    private func setupLayoutConstraints() {
+    override func updateViewConstraints() {
+        super.updateViewConstraints()
         dimmingView.extendToSuperview()
         
         scrollView.applyConstraints {

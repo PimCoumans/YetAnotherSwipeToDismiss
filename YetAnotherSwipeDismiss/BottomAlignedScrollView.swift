@@ -26,11 +26,10 @@ class BottomAlignedScrollView: UIScrollView {
         translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(contentView)
-        
-        setupLayoutConstraints()
     }
     
-    private func setupLayoutConstraints() {
+    override func updateConstraints() {
+        super.updateConstraints()
         NSLayoutConstraint.add {
             contentView.leadingAnchor.constraint(equalTo: leadingAnchor)
             contentView.trailingAnchor.constraint(equalTo: trailingAnchor)
@@ -39,12 +38,12 @@ class BottomAlignedScrollView: UIScrollView {
         }
     }
     
-    override func updateConstraints() {
-        super.updateConstraints()
-    }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
+        self.updateInsets()
+    }
+    
+    private func updateInsets() {
         // Set top inset so content is aligned to bottom
         let availableArea = frame.inset(by: safeAreaInsets).size
         contentInset.top = max(0, availableArea.height - contentView.bounds.height)
