@@ -21,33 +21,24 @@ class StackViewController: DismissViewController {
     private lazy var addButton: UIButton = {
         var configuration = UIButton.Configuration.plain()
         configuration.title = "Add"
-        let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
-            self.addLabel()
-        })
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(didPressAddButton), for: .touchUpInside)
         return button
     }()
     
     private lazy var addALotButton: UIButton = {
         var configuration = UIButton.Configuration.plain()
         configuration.title = "Add a lot"
-        let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
-            self.addLabel()
-            self.addLabel()
-            self.addLabel()
-            self.addLabel()
-            self.addLabel()
-            self.addLabel()
-            self.addLabel()
-        })
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(didPressAddALotButton), for: .touchUpInside)
         return button
     }()
     
     private lazy var removeButton: UIButton = {
         var configuration = UIButton.Configuration.plain()
         configuration.title = "Remove"
-        let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
-            self.removeLabel()
-        })
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(didPressRemoveButton), for: .touchUpInside)
         return button
     }()
     
@@ -73,8 +64,8 @@ class StackViewController: DismissViewController {
         buttonStackView.addArrangedSubview(removeButton)
         buttonStackView.addArrangedSubview(addALotButton)
         buttonStackView.addArrangedSubview(addButton)
-        
-        addLabel()
+                
+        addLabel(initialAlpha: 1)
     }
 }
 
@@ -126,9 +117,45 @@ private extension StackViewController {
         .allCases.randomElement()!
     }
     
-    func addLabel() {
+    @objc func didPressAddButton() {
+        addLabel()
+        animateChanges()
+        scrollToLastLabel()
+    }
+    
+    @objc func didPressRemoveButton() {
+        let animations = removeLabel()
+        animateChanges(with: animations.change, completion: animations.completion)
+    }
+    
+    @objc func didPressAddALotButton() {
+        for _ in 0..<5 {
+            addLabel()
+        }
+        animateChanges()
+        scrollToLastLabel()
+    }
+    
+    func animateChanges(with animation: (() -> Void)? = nil, completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: 0.55, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: .allowUserInteraction) {
+            self.stackView.arrangedSubviews.forEach { if !$0.isHidden { $0.alpha = 1 } }
+            animation?()
+            self.view.layoutIfNeeded()
+        } completion: { _ in
+            completion?()
+        }
+    }
+    
+    func scrollToLastLabel() {
+        if let lastView = stackView.arrangedSubviews.last {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                self.scrollView.scrollRectToVisible(lastView.frame, animated: true)
+            }
+        }
+    }
+    
+    func addLabel(initialAlpha: CGFloat = 0) {
         let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
         let lastRandomWord = (stackView.arrangedSubviews.last as? UILabel)?.text
         var randomWord = lastRandomWord
         while randomWord == lastRandomWord {
@@ -138,23 +165,38 @@ private extension StackViewController {
         label.numberOfLines = 0
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: randomFontSize, weight: randomFontWeight)
-
-        removeButton.isEnabled = true
-        
         stackView.addArrangedSubview(label)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.scrollView.scrollRectToVisible(label.frame, animated: true)
+        
+        // Calculate approximate initial frame to fix in-animation
+        label.frame.size = label.sizeThatFits(CGSize(width: stackView.bounds.width, height: .greatestFiniteMagnitude))
+        label.frame.origin.y = stackView.bounds.maxY
+        label.alpha = initialAlpha
+        
+        label.applyConstraints {
+            $0.leadingAnchor.constraint(equalTo: stackView.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: stackView.trailingAnchor)
         }
+        
+        removeButton.isEnabled = true
     }
     
-    func removeLabel() {
-        if let label = stackView.arrangedSubviews.last {
-            stackView.removeArrangedSubview(label)
-            label.removeFromSuperview()
+    func removeLabel() -> (change: () -> Void, completion: () -> Void) {
+        var result = (change: {}, completion: {})
+        
+        if let label = stackView.arrangedSubviews.last(where: { $0.isHidden == false }) {
+            result.change = {
+                label.transform = CGAffineTransform(translationX: label.frame.minX, y: label.frame.minY)
+                self.stackView.removeArrangedSubview(label)
+                label.alpha = 0
+            }
+            result.completion = {
+                label.removeFromSuperview()
+            }
         }
         
-        if stackView.arrangedSubviews.isEmpty {
+        if stackView.arrangedSubviews.filter({ $0.isHidden == false }).isEmpty {
             removeButton.isEnabled = false
         }
+        return result
     }
 }
