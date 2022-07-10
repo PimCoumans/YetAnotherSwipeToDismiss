@@ -310,6 +310,8 @@ extension DismissController: UIViewControllerAnimatedTransitioning {
         }
         if let toView = transitionContext.view(forKey: .to) {
             transitionContext.containerView.addSubview(toView)
+            toView.setNeedsLayout()
+            toView.layoutIfNeeded()
         }
         
         let fullOffset = contentView.bounds.height + backgroundTopInset + view.safeAreaInsets.bottom
