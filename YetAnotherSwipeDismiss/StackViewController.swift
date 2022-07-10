@@ -7,9 +7,9 @@
 
 import UIKit
 
-class StackViewController: UIViewController, SwipeDismissable {
+class StackViewController: UIViewController, PanelPresentable {
     
-    let dismissController = DismissController()
+    let panelController = PanelController()
     
     private lazy var buttonStackView: UIStackView = {
         let stackView = UIStackView()
@@ -55,7 +55,7 @@ class StackViewController: UIViewController, SwipeDismissable {
     
     init() {
         super.init(nibName: nil, bundle: nil)
-        dismissController.viewController = self
+        panelController.viewController = self
     }
     
     required init?(coder: NSCoder) {
@@ -65,9 +65,6 @@ class StackViewController: UIViewController, SwipeDismissable {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.tintColor = .black
-        
-        view.addSubview(dismissController.containerView)
-        dismissController.containerView.extendToSuperview()
         
         contentView.addSubview(stackView)
         stackView.extend(to: contentView.layoutMarginsGuide)
@@ -174,12 +171,25 @@ private extension StackViewController {
     }
     
     func addLabel(initialAlpha: CGFloat = 0) {
+        
+        let maxViewCount = 40
+        
+        guard stackView.arrangedSubviews.count <= maxViewCount else {
+            return
+        }
+        
         let label = UILabel()
         let lastRandomWord = (stackView.arrangedSubviews.last as? UILabel)?.text
         var randomWord = lastRandomWord
+        
+        if stackView.arrangedSubviews.count == maxViewCount {
+            randomWord = "let‘s not get carried away"
+        }
+        
         while randomWord == lastRandomWord {
             randomWord = self.randomWord
         }
+        
         label.text = randomWord
         label.numberOfLines = 0
         label.textColor = .black

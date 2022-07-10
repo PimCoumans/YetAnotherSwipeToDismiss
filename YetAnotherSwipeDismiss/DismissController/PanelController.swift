@@ -7,22 +7,19 @@
 
 import UIKit
 
-protocol SwipeDismissable: UIViewController {
-    var dismissController: DismissController { get }
-    var contentView: UIView { get }
-    var topContentView: UIView { get }
-    var scrollView: UIScrollView { get }
+protocol PanelPresentable: UIViewController {
+    var panelController: PanelController { get }
 }
 
-extension SwipeDismissable {
-    var contentView: UIView { dismissController.contentView }
-    var topContentView: UIView { dismissController.topContentView }
-    var scrollView: UIScrollView { dismissController.scrollView }
+extension PanelPresentable {
+    var contentView: UIView { panelController.contentView }
+    var topContentView: UIView { panelController.topContentView }
+    var scrollView: UIScrollView { panelController.scrollView }
 }
 
-class DismissController: NSObject {
+class PanelController: NSObject {
     
-    weak var viewController: SwipeDismissable? { didSet {
+    weak var viewController: PanelPresentable? { didSet {
         setupViewController()
     }}
     
@@ -43,15 +40,24 @@ class DismissController: NSObject {
     class TopShadowView: UIView { }
     class BackgroundView: UIView { }
     
-    private(set) lazy var containerView: UIView = DismissContrainerView()
-    var contentView: UIView { scrollView.contentView }
-    var topContentView: UIView { topView }
+    private var viewObserver: NSKeyValueObservation?
     
-    private var areConstraintsSetup: Bool = false
-    private var areGestureRecognizersSetup: Bool = false
+    private(set) lazy var containerView: UIView = DismissContrainerView()
+    
+    var contentView: UIView {
+        ensureViewHierarchy()
+        return scrollView.contentView
+    }
+    
+    var topContentView: UIView {
+        ensureViewHierarchy()
+        return topView
+    }
+    
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
     
+    private var scrollContentView: UIView { scrollView.contentView }
     private var viewsToTranslate: [UIView] { [scrollView, backgroundView, topView, topShadowView] }
     
     private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
@@ -80,11 +86,11 @@ class DismissController: NSObject {
         return view
     }()
     
-    private(set) lazy var topView: UIView = {
+    private lazy var topView: UIView = {
         let view = TopView()
         let cornerRadius = backgroundTopInset / 2
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .lightGray
+        view.backgroundColor = .white
         view.directionalLayoutMargins.leading = cornerRadius * 0.8
         view.directionalLayoutMargins.trailing = cornerRadius * 0.8
         view.layer.cornerRadius = cornerRadius
@@ -104,78 +110,95 @@ class DismissController: NSObject {
         return view
     }()
     
-    private lazy var backgroundView: UIView = {
+    private(set) lazy var backgroundView: UIView = {
         let view = BackgroundView(frame: .zero)
-        view.backgroundColor = .lightGray
+        view.backgroundColor = .white
         return view
     }()
     
     override init() {
         super.init()
-        containerView.addSubview(dimmingView)
-        containerView.addSubview(backgroundView)
-        containerView.addSubview(scrollView)
-        containerView.addSubview(topShadowView)
-        containerView.addSubview(topView)
         
+        setupViews()
         setupViewConstraints()
         setupGestureRecognizers()
     }
 }
 
-private extension DismissController {
+private extension PanelController {
     
-    var view: UIView { containerView }
+    func ensureViewHierarchy() {
+        guard containerView.superview == nil, let viewController = viewController else {
+            return
+        }
+        if viewController.isViewLoaded == true {
+            viewController.view.addSubview(containerView)
+            self.containerView.extendToSuperview()
+        } else if viewObserver != nil {
+            viewObserver = (viewController as UIViewController).observe(\.view, options: [.new], changeHandler: { viewController, change in
+                self.ensureViewHierarchy()
+                self.viewObserver = nil
+            })
+        }
+    }
+    
+    func setupViews() {
+        containerView.addSubview(dimmingView)
+        containerView.addSubview(backgroundView)
+        containerView.addSubview(scrollView)
+        containerView.addSubview(topShadowView)
+        containerView.addSubview(topView)
+    }
     
     func setupViewController() {
         viewController?.modalPresentationStyle = .custom
         viewController?.transitioningDelegate = self
+        
+        ensureViewHierarchy()
     }
     
     func setupViewConstraints() {
         dimmingView.extendToSuperview()
         
         scrollView.applyConstraints {
-            $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            $0.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-            $0.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: backgroundTopInset)
-            $0.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+            $0.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: backgroundTopInset)
+            $0.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         }
         
         topView.applyConstraints {
-            $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            $0.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
             $0.heightAnchor.constraint(equalToConstant: backgroundTopInset)
-            $0.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor)
+            $0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor)
             
-            $0.bottomAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor)
+            $0.bottomAnchor.constraint(greaterThanOrEqualTo: scrollContentView.topAnchor)
         }
         
         topShadowView.applyConstraints {
-            $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            $0.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
             $0.heightAnchor.constraint(equalToConstant: topShadowHeight)
             $0.topAnchor.constraint(equalTo: topView.bottomAnchor)
         }
         
         backgroundView.applyConstraints {
-            $0.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            $0.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
+            $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
             $0.topAnchor.constraint(equalTo: topView.bottomAnchor)
-            $0.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: view.bounds.height) // allow for initial bounce animation
+            $0.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 300) // allow for initial bounce animation
         }
-        areConstraintsSetup = true
     }
     
     func setupGestureRecognizers() {
-        view.addGestureRecognizer(scrollView.panGestureRecognizer)
-        view.addGestureRecognizer(dismissTapGestureRecognizer)
-        view.addGestureRecognizer(dismissPanGestureRecognizer)
-        areGestureRecognizersSetup = true
+        containerView.addGestureRecognizer(scrollView.panGestureRecognizer)
+        containerView.addGestureRecognizer(dismissTapGestureRecognizer)
+        containerView.addGestureRecognizer(dismissPanGestureRecognizer)
     }
 }
 
-extension DismissController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
+extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     
     private func isGestureRecognizer(_ recognizer: UIGestureRecognizer, inView view: UIView) -> Bool {
         view.point(inside: recognizer.location(in: view), with: nil)
@@ -194,7 +217,7 @@ extension DismissController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         
-        let gestureInContent = isGestureRecognizer(gestureRecognizer, inView: contentView)
+        let gestureInContent = isGestureRecognizer(gestureRecognizer, inView: scrollContentView)
         let gestureInTopView = isGestureRecognizer(gestureRecognizer, inView: topView)
         
         if gestureRecognizer == dismissTapGestureRecognizer {
@@ -222,14 +245,14 @@ extension DismissController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
             // Manually set translation when catching scrollview content while bouncing down
             let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
             if scrollOffset < 0 {
-                let translation = recognizer.translation(in: contentView).y
-                recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: contentView)
+                let translation = recognizer.translation(in: scrollContentView).y
+                recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: scrollContentView)
                 scrollView.stopScrolling()
             }
         }
         
-        let velocity = recognizer.velocity(in: view).y
-        let offset = recognizer.translation(in: view).y
+        let velocity = recognizer.velocity(in: containerView).y
+        let offset = recognizer.translation(in: containerView).y
         
         // Only allow gesturing up when starting drag in top view
         var translation = startedGestureFromTopView ? offset : max(0, offset)
@@ -271,14 +294,14 @@ extension DismissController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     }
 }
 
-private extension DismissController {
+private extension PanelController {
     func animateDismissal(velocity: CGFloat = 0) {
         dismissGestureVelocity = velocity
         viewController?.presentingViewController?.dismiss(animated: true)
     }
 }
 
-extension DismissController: UIViewControllerTransitioningDelegate {
+extension PanelController: UIViewControllerTransitioningDelegate {
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return self
     }
@@ -287,7 +310,7 @@ extension DismissController: UIViewControllerTransitioningDelegate {
     }
 }
 
-extension DismissController: UIViewControllerAnimatedTransitioning {
+extension PanelController: UIViewControllerAnimatedTransitioning {
     
     func isPresenting(using context: UIViewControllerContextTransitioning?) -> Bool {
         context?.viewController(forKey: .to)?.isBeingPresented == true
@@ -302,22 +325,16 @@ extension DismissController: UIViewControllerAnimatedTransitioning {
     }
     
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
-        if !areConstraintsSetup {
-            print("View constraints aren‘t set up properly, make sure you‘ve added the containerView to your view")
-        }
-        if !areGestureRecognizersSetup {
-            print("Gesture recognizers aren‘t set up properly, make sure you‘ve added DismissController to your view controller")
-        }
         if let toView = transitionContext.view(forKey: .to) {
             transitionContext.containerView.addSubview(toView)
             toView.setNeedsLayout()
             toView.layoutIfNeeded()
         }
         
-        let fullOffset = contentView.bounds.height + backgroundTopInset + view.safeAreaInsets.bottom
+        let fullOffset = scrollContentView.bounds.height + backgroundTopInset + containerView.safeAreaInsets.bottom
         let transform = CGAffineTransform(translationX: 0, y: fullOffset)
         let fullDuration = transitionDuration(using: transitionContext)
-        let duration = max(0.15, fullDuration * ((fullOffset / view.bounds.height) * 0.75))
+        let duration = max(0.15, fullDuration * ((fullOffset / containerView.bounds.height) * 0.75))
         
         
         if isPresenting(using: transitionContext) {
@@ -326,9 +343,8 @@ extension DismissController: UIViewControllerAnimatedTransitioning {
             
             UIView.animate(withDuration: fullDuration * 0.35, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
                 self.dimmingView.alpha = 1
-            } completion: { finished in
-                transitionContext.completeTransition(finished)
             }
+            
             UIView.animate(
                 withDuration: fullDuration, delay: 0,
                 usingSpringWithDamping: 0.78, initialSpringVelocity: 0,
@@ -336,6 +352,8 @@ extension DismissController: UIViewControllerAnimatedTransitioning {
             ) {
                 self.dimmingView.alpha = 1
                 self.viewsToTranslate.forEach { $0.transform = .identity }
+            } completion: { finished in
+                transitionContext.completeTransition(finished)
             }
         } else {
             let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn
