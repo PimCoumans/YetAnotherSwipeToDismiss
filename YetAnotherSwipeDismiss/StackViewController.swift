@@ -7,7 +7,9 @@
 
 import UIKit
 
-class StackViewController: DismissViewController {
+class StackViewController: UIViewController, SwipeDismissable {
+    
+    let dismissController = DismissController()
     
     private lazy var buttonStackView: UIStackView = {
         let stackView = UIStackView()
@@ -51,9 +53,21 @@ class StackViewController: DismissViewController {
         return stackView
     }()
     
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        dismissController.viewController = self
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.tintColor = .black
+        
+        view.addSubview(dismissController.containerView)
+        dismissController.containerView.extendToSuperview()
         
         contentView.addSubview(stackView)
         stackView.extend(to: contentView.layoutMarginsGuide)
@@ -137,6 +151,11 @@ private extension StackViewController {
     }
     
     func animateChanges(with animation: (() -> Void)? = nil, completion: (() -> Void)? = nil) {
+        guard !isBeingPresented && !isBeingDismissed else {
+            view.setNeedsLayout()
+            view.layoutIfNeeded()
+            return
+        }
         UIView.animate(withDuration: 0.55, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: .allowUserInteraction) {
             self.stackView.arrangedSubviews.forEach { if !$0.isHidden { $0.alpha = 1 } }
             animation?()

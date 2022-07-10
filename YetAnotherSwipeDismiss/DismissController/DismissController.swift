@@ -1,36 +1,50 @@
 //
-//  DismissViewController.swift
+//  DismissController.swift
 //  YetAnotherSwipeDismiss
 //
-//  Created by Pim on 08/07/2022.
+//  Created by Pim on 10/07/2022.
 //
 
 import UIKit
 
-class DismissViewController: UIViewController {
+protocol SwipeDismissable: UIViewController {
+    var dismissController: DismissController { get }
+    var contentView: UIView { get }
+    var topContentView: UIView { get }
+    var scrollView: UIScrollView { get }
+}
+
+extension SwipeDismissable {
+    var contentView: UIView { dismissController.contentView }
+    var topContentView: UIView { dismissController.topContentView }
+    var scrollView: UIScrollView { dismissController.scrollView }
+}
+
+class DismissController: NSObject {
     
-    init() {
-        super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .custom
-        transitioningDelegate = self
-    }
+    weak var viewController: SwipeDismissable? { didSet {
+        setupViewController()
+    }}
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    var dimOpactity: CGFloat = 0.35 { didSet {
+        dimmingView.backgroundColor = UIColor(white: 0, alpha: dimOpactity)
+    }}
     
-    let dimOpactity: CGFloat = 0.35
     let backgroundTopInset: CGFloat = 65
     let topShadowHeight: CGFloat = 1
     
+    class DismissContrainerView: UIView { }
     class DimmingView: UIView { }
     class TopView: UIView { }
     class TopShadowView: UIView { }
     class BackgroundView: UIView { }
     
+    private(set) lazy var containerView: UIView = DismissContrainerView()
     var contentView: UIView { scrollView.contentView }
     var topContentView: UIView { topView }
     
+    private var areConstraintsSetup: Bool = false
+    private var areGestureRecognizersSetup: Bool = false
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
     
@@ -49,7 +63,7 @@ class DismissViewController: UIViewController {
     }()
     
     private(set) lazy var scrollView: BottomAlignedScrollView = {
-        let scrollView = BottomAlignedScrollView(frame: self.view.bounds)
+        let scrollView = BottomAlignedScrollView()
         scrollView.extraTopInset = backgroundTopInset
         scrollView.alwaysBounceVertical = true
         scrollView.delegate = self
@@ -57,7 +71,7 @@ class DismissViewController: UIViewController {
     }()
     
     private lazy var dimmingView: UIView = {
-        let view = DimmingView(frame: self.view.bounds)
+        let view = DimmingView()
         view.backgroundColor = .black.withAlphaComponent(dimOpactity)
         return view
     }()
@@ -92,21 +106,29 @@ class DismissViewController: UIViewController {
         return view
     }()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .clear
+    override init() {
+        super.init()
+        containerView.addSubview(dimmingView)
+        containerView.addSubview(backgroundView)
+        containerView.addSubview(scrollView)
+        containerView.addSubview(topShadowView)
+        containerView.addSubview(topView)
         
-        view.addSubview(dimmingView)
-        view.addSubview(backgroundView)
-        view.addSubview(scrollView)
-        view.addSubview(topShadowView)
-        view.addSubview(topView)
-        
+        setupViewConstraints()
         setupGestureRecognizers()
     }
+}
+
+private extension DismissController {
     
-    override func updateViewConstraints() {
-        super.updateViewConstraints()
+    var view: UIView { containerView }
+    
+    func setupViewController() {
+        viewController?.modalPresentationStyle = .custom
+        viewController?.transitioningDelegate = self
+    }
+    
+    func setupViewConstraints() {
         dimmingView.extendToSuperview()
         
         scrollView.applyConstraints {
@@ -138,16 +160,18 @@ class DismissViewController: UIViewController {
             $0.topAnchor.constraint(equalTo: topView.bottomAnchor)
             $0.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: view.bounds.height) // allow for initial bounce animation
         }
+        areConstraintsSetup = true
     }
     
-    private func setupGestureRecognizers() {
+    func setupGestureRecognizers() {
         view.addGestureRecognizer(scrollView.panGestureRecognizer)
         view.addGestureRecognizer(dismissTapGestureRecognizer)
         view.addGestureRecognizer(dismissPanGestureRecognizer)
+        areGestureRecognizersSetup = true
     }
 }
 
-extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelegate {
+extension DismissController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     
     private func isGestureRecognizer(_ recognizer: UIGestureRecognizer, inView view: UIView) -> Bool {
         view.point(inside: recognizer.location(in: view), with: nil)
@@ -243,18 +267,14 @@ extension DismissViewController: UIScrollViewDelegate, UIGestureRecognizerDelega
     }
 }
 
-private extension DismissViewController {
-    @objc func animateDismissal(velocity: CGFloat = 0) {
+private extension DismissController {
+    func animateDismissal(velocity: CGFloat = 0) {
         dismissGestureVelocity = velocity
-        presentingViewController?.dismiss(animated: true)
+        viewController?.presentingViewController?.dismiss(animated: true)
     }
 }
 
-private extension DismissViewController {
-    var randomFontSize: CGFloat { .random(in: 20...250) }
-}
-
-extension DismissViewController: UIViewControllerTransitioningDelegate {
+extension DismissController: UIViewControllerTransitioningDelegate {
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return self
     }
@@ -263,9 +283,14 @@ extension DismissViewController: UIViewControllerTransitioningDelegate {
     }
 }
 
-extension DismissViewController: UIViewControllerAnimatedTransitioning {
+extension DismissController: UIViewControllerAnimatedTransitioning {
+    
+    func isPresenting(using context: UIViewControllerContextTransitioning?) -> Bool {
+        context?.viewController(forKey: .to)?.isBeingPresented == true
+    }
+    
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
-        if isBeingPresented {
+        if isPresenting(using: transitionContext) {
             return 0.62
         } else {
             return 0.38
@@ -273,6 +298,12 @@ extension DismissViewController: UIViewControllerAnimatedTransitioning {
     }
     
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+        if !areConstraintsSetup {
+            print("View constraints aren‘t set up properly, make sure you‘ve added the containerView to your view")
+        }
+        if !areGestureRecognizersSetup {
+            print("Gesture recognizers aren‘t set up properly, make sure you‘ve added DismissController to your view controller")
+        }
         if let toView = transitionContext.view(forKey: .to) {
             transitionContext.containerView.addSubview(toView)
         }
@@ -283,7 +314,7 @@ extension DismissViewController: UIViewControllerAnimatedTransitioning {
         let duration = max(0.15, fullDuration * ((fullOffset / view.bounds.height) * 0.75))
         
         
-        if isBeingPresented {
+        if isPresenting(using: transitionContext) {
             dimmingView.alpha = 0
             viewsToTranslate.forEach { $0.transform = transform }
             
@@ -315,5 +346,4 @@ extension DismissViewController: UIViewControllerAnimatedTransitioning {
             }
         }
     }
-    
 }
