@@ -151,7 +151,8 @@ private extension StackViewController {
         UIView.animate(withDuration: 0.55, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: .allowUserInteraction) {
             self.stackView.arrangedSubviews.forEach { if !$0.isHidden { $0.alpha = 1 } }
             animation?()
-            self.view.layoutIfNeeded()
+            self.panelController.layoutIfNeeded()
+//            self.view.layoutIfNeeded()
         } completion: { _ in
             completion?()
         }
