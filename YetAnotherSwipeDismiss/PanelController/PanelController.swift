@@ -83,7 +83,9 @@ class PanelController: NSObject {
     
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
-    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, headerView, topShadowView] }
+    private var viewsToTranslate: [UIView] {
+        [containerView, backgroundView, viewControllerScrollView].filter { $0.superview != containerView }
+    }
     
     private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -207,7 +209,7 @@ private extension PanelController {
         // Make top of scroll indicator never extend beyond top of content
         let topScrollOvershoot = min(0, scrollView.contentOffset.y + scrollView.adjustedContentInset.top)
         scrollView.verticalScrollIndicatorInsets = UIEdgeInsets(
-            top: scrollView.adjustedContentInset.top - topScrollOvershoot,
+            top: max(scrollView.adjustedContentInset.top - topScrollOvershoot, topShadowHeight),
             left: 0,
             bottom: scrollView.contentInset.bottom,
             right: 0
@@ -348,18 +350,19 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     }
     
     private var isScrollViewAtTop: Bool {
-        scrollView.contentOffset.y + scrollView.adjustedContentInset.top < UIScreen.main.scale
+        // TODO: Implement this in bottom aligner
+        viewControllerScrollView.contentOffset.y + viewControllerScrollView.adjustedContentInset.top < UIScreen.main.scale
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if isGestureRecognizer(gestureRecognizer, inView: headerView) {
             return false
         }
-        return otherGestureRecognizer == scrollView.panGestureRecognizer
+        return otherGestureRecognizer == viewControllerScrollView.panGestureRecognizer
     }
     
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        
+        // TODO: Implement touch checking in ScrollViewBottomAligner
         let gestureInContent = isGestureRecognizer(gestureRecognizer, inView: scrollContentView)
         let gestureInTopView = isGestureRecognizer(gestureRecognizer, inView: headerView)
         
@@ -386,8 +389,10 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
         
         if recognizer.state == .began {
             // Manually set translation when catching scrollview content while bouncing down
-            let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+            // TODO: - `relativeScrollOffset: CGFloat` in ScrollViewBottomAligner
+            let scrollOffset = viewControllerScrollView.contentOffset.y + viewControllerScrollView.adjustedContentInset.top
             if scrollOffset < 0 {
+                // TODO: Don't use scrollContentView here
                 let translation = recognizer.translation(in: scrollContentView).y
                 recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: scrollContentView)
                 scrollView.stopScrolling()
@@ -412,7 +417,7 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
             if velocity > 0 && offset > 0 {
                 animateDismissal(velocity: velocity)
             } else {
-                scrollView.bounces = true
+                viewControllerScrollView.bounces = true
                 UIView.animate(
                     withDuration: 0.6, delay: 0,
                     usingSpringWithDamping: 0.78, initialSpringVelocity: 0,
@@ -423,7 +428,7 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
             }
         } else {
             viewsToTranslate.forEach { $0.transform = transform }
-            scrollView.bounces = offset <= 0 || startedGestureFromTopView
+            viewControllerScrollView.bounces = offset <= 0 || startedGestureFromTopView
         }
     }
 }
@@ -468,9 +473,9 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
         
         if let toView = transitionContext.view(forKey: .to) {
             transitionContext.containerView.addSubview(toView)
+            ensureViewHierarchy()
             toView.setNeedsLayout()
             toView.layoutIfNeeded()
-            ensureViewHierarchy()
         }
         
         if isPresenting {
@@ -503,8 +508,8 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
             }
         } else {
             let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn
-            let untransformedOffset = scrollView.frame.applying(scrollView.transform.inverted()).minY
-            let transformedOffset = scrollView.frame.minY
+            let untransformedOffset = containerView.frame.applying(containerView.transform.inverted()).minY
+            let transformedOffset = containerView.frame.minY
             let distanceToCover = fullOffset - (transformedOffset - untransformedOffset)
             let dismissDuration = min(duration, distanceToCover / dismissGestureVelocity)
             
