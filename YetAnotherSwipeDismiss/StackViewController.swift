@@ -66,11 +66,13 @@ class StackViewController: UIViewController, PanelPresentable {
         super.viewDidLoad()
         view.tintColor = .black
         
+        view.overrideUserInterfaceStyle = .light
+        
         contentView.addSubview(stackView)
         stackView.extend(to: contentView.layoutMarginsGuide)
         
-        topContentView.addSubview(buttonStackView)
-        buttonStackView.extend(to: topContentView.layoutMarginsGuide)
+        headerContentView.addSubview(buttonStackView)
+        buttonStackView.extend(to: headerContentView.layoutMarginsGuide)
         
         buttonStackView.addArrangedSubview(removeButton)
         buttonStackView.addArrangedSubview(addALotButton)
@@ -131,7 +133,7 @@ private extension StackViewController {
     @objc func didPressAddButton() {
         addLabel()
         animateChanges()
-        scrollToLastLabel()
+        scrollToBottom()
     }
     
     @objc func didPressRemoveButton() {
@@ -144,7 +146,7 @@ private extension StackViewController {
             addLabel()
         }
         animateChanges()
-        scrollToLastLabel()
+        scrollToBottom()
     }
     
     func animateChanges(with animation: (() -> Void)? = nil, completion: (() -> Void)? = nil) {
@@ -158,12 +160,9 @@ private extension StackViewController {
         }
     }
     
-    func scrollToLastLabel() {
-        if let lastView = stackView.arrangedSubviews.last {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                self.scrollView.scrollRectToVisible(lastView.frame, animated: true)
-            }
-        }
+    func scrollToBottom() {
+        let bottomOffset = CGPoint(x: 0, y: panelScrollView.contentSize.height - panelScrollView.bounds.height + panelScrollView.adjustedContentInset.bottom)
+        panelScrollView.setContentOffset(bottomOffset, animated: true)
     }
     
     func addLabel(initialAlpha: CGFloat = 0) {

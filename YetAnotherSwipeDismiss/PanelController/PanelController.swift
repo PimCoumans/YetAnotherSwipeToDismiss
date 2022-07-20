@@ -9,12 +9,14 @@ import UIKit
 
 protocol PanelPresentable: UIViewController {
     var panelController: PanelController { get }
+    var panelScrollView: UIScrollView { get }
 }
 
 extension PanelPresentable {
+    var panelScrollView: UIScrollView { panelController.scrollView }
+    
     var contentView: UIView { panelController.contentView }
-    var topContentView: UIView { panelController.topContentView }
-    var scrollView: UIScrollView { panelController.scrollView }
+    var headerContentView: UIView { panelController.headerContentView }
 }
 
 class PanelController: NSObject {
@@ -32,38 +34,56 @@ class PanelController: NSObject {
     }}
     
     let backgroundTopInset: CGFloat = 65
-    let topShadowHeight: CGFloat = 1
+    let topShadowHeight: CGFloat = 3
+    var backgroundTopConstraint: NSLayoutConstraint?
     
-    class DismissContrainerView: UIView { }
-    class DimmingView: UIView { }
-    class TopView: UIView { }
-    class TopShadowView: UIView { }
-    class BackgroundView: UIView { }
+    let showColors: Bool = false
+    
+    private class PanelScrollView: UIScrollView { }
+    private class PanelContrainerView: UIView { }
+    private class PanelDimmingView: UIView { }
+    private class PanelHeaderContentView: UIView { }
+    private class PanelTopShadowView: UIView { }
+    private class PanelBackgroundView: UIView { }
     
     private var viewObserver: NSKeyValueObservation?
     private var needsLayoutObserver: NSKeyValueObservation?
     
-    private(set) lazy var containerView: UIView = DismissContrainerView()
+    private var scrollContentSizeObserver: NSKeyValueObservation?
+    private var scrollFrameObserver: NSKeyValueObservation?
+    private var scrollContentOffsetObserver: NSKeyValueObservation?
     
-    var contentView: UIView {
-        ensureViewHierarchy()
-        return scrollContentView
+    
+    private(set) lazy var containerView: UIView = PanelContrainerView()
+    
+    private var isScrollViewCustom: Bool {
+        viewControllerScrollView is PanelScrollView == false
     }
     
-    var topContentView: UIView {
-        ensureViewHierarchy()
-        return topView
+    var contentView: UIView {
+        scrollContentView
+    }
+    
+    var headerContentView: UIView {
+        headerView
+    }
+    
+    var scrollView: UIScrollView {
+        panelScrollView
+    }
+    
+    private var viewControllerScrollView: UIScrollView {
+        viewController?.panelScrollView ?? panelScrollView
     }
     
     func layoutIfNeeded() {
         viewController?.view.layoutIfNeeded()
         backgroundView.superview?.layoutIfNeeded()
-        scrollView.contentSize.height = scrollContentView.bounds.height
     }
     
     private var startedGestureFromTopView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
-    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, topView, topShadowView] }
+    private var viewsToTranslate: [UIView] { [scrollView, backgroundView, headerView, topShadowView] }
     
     private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -79,46 +99,56 @@ class PanelController: NSObject {
     
     private lazy var scrollContentView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black.withAlphaComponent(0.2)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        if showColors {
+            view.backgroundColor = .black.withAlphaComponent(0.2)
+        }
         return view
     }()
     
-    private(set) lazy var scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.backgroundColor = .green.withAlphaComponent(0.2)
-//        scrollView.extraTopInset = backgroundTopInset
+    private lazy var panelScrollView: UIScrollView = {
+        let scrollView = PanelScrollView()
         scrollView.alwaysBounceVertical = true
-        scrollView.delegate = self
+        if showColors {
+            scrollView.backgroundColor = .green.withAlphaComponent(0.2)
+        }
         return scrollView
     }()
     
     private lazy var dimmingView: UIView = {
-        let view = DimmingView()
+        let view = PanelDimmingView()
         view.backgroundColor = .black.withAlphaComponent(dimOpactity)
         return view
     }()
     
-    private lazy var topView: UIView = {
-        let view = TopView()
+    private lazy var headerView: UIView = {
+        let view = PanelHeaderContentView()
         
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .blue.withAlphaComponent(0.2)
         view.directionalLayoutMargins.leading = backgroundTopInset * 0.4
         view.directionalLayoutMargins.trailing = backgroundTopInset * 0.4
+        
+        if showColors {
+            view.backgroundColor = .blue.withAlphaComponent(0.2)
+        }
         return view
     }()
     
     private(set) lazy var topShadowView: UIView = {
-        let view = TopShadowView()
+        let view = PanelTopShadowView()
         view.isUserInteractionEnabled = false
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(white: 0, alpha: topShadowOpactity)
+        if showColors {
+            view.backgroundColor = .red
+        } else {
+            view.backgroundColor = .black.withAlphaComponent(topShadowOpactity)
+        }
         view.alpha = 0
         return view
     }()
     
     private(set) lazy var backgroundView: UIView = {
-        let view = BackgroundView(frame: .zero)
+        let view = PanelBackgroundView(frame: .zero)
         view.backgroundColor = .white
         
         let cornerRadius = backgroundTopInset / 2
@@ -134,8 +164,6 @@ class PanelController: NSObject {
         super.init()
         
         setupViews()
-        setupViewConstraints()
-        setupGestureRecognizers()
     }
 }
 
@@ -147,8 +175,7 @@ private extension PanelController {
         }
         let viewController = panelPresentable as UIViewController
         if viewController.isViewLoaded == true {
-            viewController.view.addSubview(containerView)
-            self.containerView.extendToSuperview()
+            setupViewControllerView()
         } else if viewObserver != nil {
             viewObserver = viewController.observe(\.view, options: [.new], changeHandler: { viewController, change in
                 self.ensureViewHierarchy()
@@ -158,12 +185,40 @@ private extension PanelController {
     }
     
     func setupViews() {
-//        containerView.addSubview(dimmingView)
-//        containerView.addSubview(backgroundView)
+        containerView.layoutMargins.top = backgroundTopInset
+        
         scrollView.addSubview(scrollContentView)
+        
         containerView.addSubview(scrollView)
+        containerView.addSubview(headerView)
         containerView.addSubview(topShadowView)
-        containerView.addSubview(topView)
+    }
+    
+    func updateScrollViewInsets() {
+        let scrollView = viewControllerScrollView
+        // Set top inset so content is aligned to bottom
+        let availableArea = scrollView.frame.inset(by: scrollView.safeAreaInsets).size
+        scrollView.contentInset.top = max(0, availableArea.height - scrollView.contentSize.height)
+        
+        let relativeScrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        
+        backgroundTopConstraint?.constant = scrollView.contentInset.top - relativeScrollOffset
+        
+        // Make top of scroll indicator never extend beyond top of content
+        let topScrollOvershoot = min(0, scrollView.contentOffset.y + scrollView.adjustedContentInset.top)
+        scrollView.verticalScrollIndicatorInsets = UIEdgeInsets(
+            top: scrollView.adjustedContentInset.top - topScrollOvershoot,
+            left: 0,
+            bottom: scrollView.contentInset.bottom,
+            right: 0
+        )
+        
+        let shadowAlpha: CGFloat = scrollView.contentOffset.y > 0 ? 1 : 0
+        if topShadowView.alpha != shadowAlpha {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+                self.topShadowView.alpha = shadowAlpha
+            }
+        }
     }
     
     func setupViewController() {
@@ -173,40 +228,80 @@ private extension PanelController {
         ensureViewHierarchy()
     }
     
+    func setupViewControllerView() {
+        guard let viewController = viewController else {
+            return
+        }
+        if isScrollViewCustom {
+            panelScrollView.removeFromSuperview()
+            viewControllerScrollView.removeConstraints(viewControllerScrollView.constraints)
+            viewController.view.insertSubview(containerView, belowSubview: viewControllerScrollView)
+        } else {
+            viewController.view.addSubview(containerView)
+        }
+        
+        let scrollView = viewControllerScrollView
+        scrollContentSizeObserver = scrollView.observe(\.contentSize, options: [.old, .new]) { [weak self] _, change in
+            guard change.oldValue != change.newValue else {
+                return
+            }
+            self?.updateScrollViewInsets()
+        }
+        
+        scrollFrameObserver = scrollView.observe(\.frame, options: [.old, .new]) { [weak self] _, change in
+            guard change.oldValue != change.newValue else {
+                return
+            }
+            self?.updateScrollViewInsets()
+        }
+        
+        scrollContentOffsetObserver = scrollView.observe(\.contentOffset, options: [.old, .new]) { [weak self] _, change in
+            guard change.oldValue != change.newValue else {
+                return
+            }
+            self?.updateScrollViewInsets()
+        }
+        
+        setupViewConstraints()
+        setupGestureRecognizers()
+    }
+    
     func setupViewConstraints() {
+        containerView.extendToSuperview()
+        
+        let topHeight = backgroundTopInset
+        let scrollView = viewControllerScrollView
         
         scrollView.applyConstraints {
             $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
             $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
-            $0.heightAnchor.constraint(lessThanOrEqualTo: scrollContentView.heightAnchor, constant: scrollView.safeAreaInsets.bottom)
-//            $0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor, constant: backgroundTopInset)
-            
-//            $0.topAnchor.constraint(lessThanOrEqualTo: scrollContentView.topAnchor)
             $0.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            $0.topAnchor.constraint(equalTo: containerView.layoutMarginsGuide.topAnchor)
         }
         
-        scrollContentView.applyConstraints {
+        if !isScrollViewCustom {
+            scrollContentView.applyConstraints {
+                $0.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor)
+                $0.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor)
+                $0.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor)
+                $0.heightAnchor.constraint(equalTo: scrollView.contentLayoutGuide.heightAnchor)
+                $0.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor)
+            }
+        }
+        
+        headerView.applyConstraints {
             $0.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor)
             $0.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor)
-            $0.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
-            $0.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor)
-        }
-        
-        topView.applyConstraints {
-            $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
-            $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
-            $0.heightAnchor.constraint(equalToConstant: backgroundTopInset)
-            $0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor)
-            
-            $0.bottomAnchor.constraint(greaterThanOrEqualTo: scrollContentView.topAnchor)
+            $0.heightAnchor.constraint(equalToConstant: topHeight)
         }
         
         topShadowView.applyConstraints {
             $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
             $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
             $0.heightAnchor.constraint(equalToConstant: topShadowHeight)
-            $0.topAnchor.constraint(equalTo: scrollContentView.topAnchor)
+            $0.topAnchor.constraint(equalTo: headerView.bottomAnchor)
         }
+        updateScrollViewInsets()
     }
     
     func setupBackgroundViews(in containerView: UIView) {
@@ -216,19 +311,31 @@ private extension PanelController {
     
     func setupBackgroundViewConstraints() {
         dimmingView.extendToSuperview()
+        
+        let topInset = backgroundTopInset
+        let scrollView = viewControllerScrollView
+        
+        
         backgroundView.applyConstraints {
             $0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
             $0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
-            
-//            $0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor)
-            $0.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: -backgroundTopInset)
-            
+            $0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor)
+
             $0.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 300) // allow for initial bounce animation
         }
+        
+        backgroundTopConstraint = backgroundView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: topInset)
+        backgroundTopConstraint?.priority = .defaultLow
+        backgroundTopConstraint?.isActive = true
+        
+        headerView.applyConstraints {
+            $0.topAnchor.constraint(equalTo: backgroundView.topAnchor)
+        }
+        updateScrollViewInsets()
     }
     
     func setupGestureRecognizers() {
-        containerView.addGestureRecognizer(scrollView.panGestureRecognizer)
+        containerView.addGestureRecognizer(viewControllerScrollView.panGestureRecognizer)
         containerView.addGestureRecognizer(dismissTapGestureRecognizer)
         containerView.addGestureRecognizer(dismissPanGestureRecognizer)
     }
@@ -241,11 +348,11 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     }
     
     private var isScrollViewAtTop: Bool {
-        scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top
+        scrollView.contentOffset.y + scrollView.adjustedContentInset.top < UIScreen.main.scale
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if isGestureRecognizer(gestureRecognizer, inView: topView) {
+        if isGestureRecognizer(gestureRecognizer, inView: headerView) {
             return false
         }
         return otherGestureRecognizer == scrollView.panGestureRecognizer
@@ -254,7 +361,7 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         
         let gestureInContent = isGestureRecognizer(gestureRecognizer, inView: scrollContentView)
-        let gestureInTopView = isGestureRecognizer(gestureRecognizer, inView: topView)
+        let gestureInTopView = isGestureRecognizer(gestureRecognizer, inView: headerView)
         
         if gestureRecognizer == dismissTapGestureRecognizer {
             return !gestureInContent && !gestureInTopView
@@ -319,15 +426,6 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
             scrollView.bounces = offset <= 0 || startedGestureFromTopView
         }
     }
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let shadowAlpha: CGFloat = scrollView.contentOffset.y > 0 ? 1 : 0
-        if topShadowView.alpha != shadowAlpha {
-            UIView.animate(withDuration: 0.15, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
-                self.topShadowView.alpha = shadowAlpha
-            }
-        }
-    }
 }
 
 private extension PanelController {
@@ -372,6 +470,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
             transitionContext.containerView.addSubview(toView)
             toView.setNeedsLayout()
             toView.layoutIfNeeded()
+            ensureViewHierarchy()
         }
         
         if isPresenting {
