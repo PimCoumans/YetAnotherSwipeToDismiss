@@ -373,7 +373,6 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
         // Set initial state
         startedGestureInHeaderView = false
         
-        // TODO: Implement touch checking in UIScrollView extension
         let isGestureInContent = isGestureRecognizerInScrollContent(gestureRecognizer)
         let isGestureInHeaderView = isGestureRecognizer(gestureRecognizer, inView: headerView)
         
@@ -386,7 +385,7 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
                 return true
             }
             if isGestureInContent {
-                return scrollView.isAtTop
+                return scrollView.isAtTop || !scrollView.contentExeedsBounds
             }
         }
         
@@ -400,12 +399,10 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
     @objc func handleDismissGestureRecognizer(recognizer: UIPanGestureRecognizer) {
         if recognizer.state == .began {
             // Manually set translation when catching scrollview content while bouncing down
-            // TODO: - `relativeScrollOffset: CGFloat` in UIScrollView extension
-            let scrollOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+            let scrollOffset = scrollView.relativeContentOffset.y
             if scrollOffset < 0 {
-                // FIXME: Don't use scrollContentView here
-                let translation = recognizer.translation(in: scrollContentView).y
-                recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: scrollContentView)
+                let translation = recognizer.translation(in: containerView).y
+                recognizer.setTranslation(CGPoint(x: 0, y: translation - scrollOffset), in: containerView)
                 scrollView.stopScrolling()
             }
         }
