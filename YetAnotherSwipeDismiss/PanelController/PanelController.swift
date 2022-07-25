@@ -231,7 +231,7 @@ private extension PanelController {
         }
         if isScrollViewCustom {
             panelScrollView.removeFromSuperview()
-            
+            prepareCustomScrollView(scrollView)
             viewController.view.insertSubview(containerView, belowSubview: scrollView)
             containerView.insertSubview(scrollView, at: 0)
         } else {
