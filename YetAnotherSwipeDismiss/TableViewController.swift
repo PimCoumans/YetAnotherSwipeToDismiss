@@ -1,0 +1,100 @@
+//
+//  TableViewController.swift
+//  YetAnotherSwipeDismiss
+//
+//  Created by Pim on 21/07/2022.
+//
+
+import UIKit
+
+class TableViewController: UIViewController, PanelPresentable {
+    
+    let panelController = PanelController()
+    
+    var panelScrollView: UIScrollView {
+        tableView
+    }
+    
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        panelController.viewController = self
+    }
+    
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: self.view.bounds, style: .plain)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.dataSource = self
+        return tableView
+    }()
+    
+    
+    let numberOfCells = 8
+    
+    
+    private lazy var titleView: UILabel = {
+        let label = UILabel()
+        label.text = "Some TableView"
+        label.textColor = .label
+        label.font = .preferredFont(forTextStyle: .title2)
+        label.adjustsFontForContentSizeCategory = true
+        return label
+    }()
+    
+    private lazy var doneButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = "Done"
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(didPressDoneButton), for: .touchUpInside)
+        return button
+    }()
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.addSubview(tableView)
+        tableView.extendToSuperview()
+        
+        headerContentView.addSubview(titleView)
+        headerContentView.addSubview(doneButton)
+        doneButton.applyConstraints {
+            $0.trailingAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.trailingAnchor)
+            $0.topAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.topAnchor)
+            $0.bottomAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.bottomAnchor)
+        }
+        
+        titleView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let centerX = titleView.centerXAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.centerXAnchor)
+        centerX.priority = .defaultLow
+        titleView.applyConstraints {
+            $0.topAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.topAnchor)
+            $0.bottomAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.bottomAnchor)
+            $0.trailingAnchor.constraint(lessThanOrEqualTo: doneButton.leadingAnchor, constant: 10)
+            $0.leadingAnchor.constraint(greaterThanOrEqualTo: headerContentView.layoutMarginsGuide.leadingAnchor)
+            centerX
+        }
+    }
+}
+
+extension TableViewController {
+    @objc func didPressDoneButton(button: UIButton) {
+        presentingViewController?.dismiss(animated: true)
+    }
+}
+
+extension TableViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        numberOfCells
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
+        cell.textLabel?.text = "Table Cell \(indexPath.row)"
+        cell.backgroundColor = .clear
+        
+        return cell
+    }
+}

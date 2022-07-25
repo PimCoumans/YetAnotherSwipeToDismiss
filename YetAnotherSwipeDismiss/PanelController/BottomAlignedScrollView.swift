@@ -63,14 +63,3 @@ class BottomAlignedScrollView: UIScrollView {
         fatalError("init(coder:) has not been implemented")
     }
 }
-
-extension UIScrollView {
-    /// Immediately halts scrolling and clamps offset to contentSize
-    func stopScrolling() {
-        var contentOffset = self.contentOffset
-        contentOffset.y = max(-adjustedContentInset.top, contentOffset.y)
-        let contentHeight = contentSize.height + adjustedContentInset.bottom
-        contentOffset.y = min(max(-adjustedContentInset.top, contentHeight - bounds.height), contentOffset.y)
-        setContentOffset(contentOffset, animated: false)
-    }
-}
