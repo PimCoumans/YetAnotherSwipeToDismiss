@@ -42,7 +42,7 @@ class SimpleViewController: UIViewController, PanelPresentable {
         
         contentView.addSubview(simpleView)
         simpleView.extendToSuperview()
-        simpleView.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        simpleView.heightAnchor.constraint(equalToConstant: 400).isActive = true
         
         headerContentView.addSubview(cancelButton)
         cancelButton.applyConstraints {
