@@ -25,6 +25,7 @@ class StackViewController: UIViewController, PanelPresentable {
         configuration.title = "Add"
         let button = UIButton(configuration: configuration)
         button.addTarget(self, action: #selector(didPressAddButton), for: .touchUpInside)
+        button.maximumContentSizeCategory = .accessibilityMedium
         return button
     }()
     
@@ -33,6 +34,7 @@ class StackViewController: UIViewController, PanelPresentable {
         configuration.title = "Add a lot"
         let button = UIButton(configuration: configuration)
         button.addTarget(self, action: #selector(didPressAddALotButton), for: .touchUpInside)
+        button.maximumContentSizeCategory = .accessibilityMedium
         return button
     }()
     
@@ -41,6 +43,7 @@ class StackViewController: UIViewController, PanelPresentable {
         configuration.title = "Remove"
         let button = UIButton(configuration: configuration)
         button.addTarget(self, action: #selector(didPressRemoveButton), for: .touchUpInside)
+        button.maximumContentSizeCategory = .accessibilityMedium
         return button
     }()
     
@@ -49,7 +52,6 @@ class StackViewController: UIViewController, PanelPresentable {
         stackView.axis = .vertical
         stackView.alignment = .leading
         stackView.distribution = .fill
-        stackView.spacing = 20
         return stackView
     }()
     
@@ -64,9 +66,6 @@ class StackViewController: UIViewController, PanelPresentable {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.tintColor = .black
-        
-        view.overrideUserInterfaceStyle = .light
         
         contentView.addSubview(stackView)
         stackView.extend(to: contentView.layoutMarginsGuide)
@@ -98,6 +97,24 @@ extension UIFont.Weight: CaseIterable {
     }
 }
 
+extension UIFont.TextStyle: CaseIterable {
+    public static var allCases: [UIFont.TextStyle] {
+        [
+            .largeTitle,
+            .title1,
+            .title2,
+            .title3,
+            .headline,
+            .subheadline,
+            .body,
+            .callout,
+            .footnote,
+            .caption1,
+            .caption2
+        ]
+    }
+}
+
 private extension StackViewController {
     
     var randomWord: String {
@@ -124,6 +141,10 @@ private extension StackViewController {
     
     var randomFontSize: CGFloat {
         .random(in: 24...64)
+    }
+    
+    var randomTextStyle: UIFont.TextStyle {
+        .allCases.randomElement()!
     }
     
     var randomFontWeight: UIFont.Weight {
@@ -187,8 +208,9 @@ private extension StackViewController {
         
         label.text = randomWord
         label.numberOfLines = 0
-        label.textColor = .black
+        label.textColor = .label
         label.font = UIFont.systemFont(ofSize: randomFontSize, weight: randomFontWeight)
+        label.adjustsFontForContentSizeCategory = true
         stackView.addArrangedSubview(label)
         
         // Calculate approximate initial frame to fix in-animation
