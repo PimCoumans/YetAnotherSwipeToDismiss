@@ -39,7 +39,11 @@ class PanelController: NSObject {
     
     let showColors: Bool = false
     
-    private class PanelScrollView: UIScrollView { }
+    private class PanelScrollView: UIScrollView {
+        override func touchesShouldCancel(in view: UIView) -> Bool {
+            return true
+        }
+    }
     private class PanelContrainerView: UIView { }
     private class PanelDimmingView: UIView { }
     private class PanelHeaderContentView: UIView { }
@@ -48,11 +52,7 @@ class PanelController: NSObject {
     
     private var viewObserver: NSKeyValueObservation?
     private var needsLayoutObserver: NSKeyValueObservation?
-    
-    private var scrollContentSizeObserver: NSKeyValueObservation?
-    private var scrollFrameObserver: NSKeyValueObservation?
-    private var scrollContentOffsetObserver: NSKeyValueObservation?
-    
+    private var scrollViewObserver = ScrollViewObserver()
     
     private(set) lazy var containerView: UIView = PanelContrainerView()
     
@@ -71,9 +71,12 @@ class PanelController: NSObject {
     private(set) lazy var panelScrollView: UIScrollView = {
         let scrollView = PanelScrollView()
         scrollView.alwaysBounceVertical = true
+        scrollView.canCancelContentTouches = true
+        scrollView.panGestureRecognizer.cancelsTouchesInView = true
         if showColors {
             scrollView.backgroundColor = .green.withAlphaComponent(0.2)
         }
+        scrollViewObserver.scrollView = scrollView
         return scrollView
     }()
     
@@ -147,7 +150,6 @@ class PanelController: NSObject {
     
     private(set) lazy var backgroundView: UIView = {
         let view = PanelBackgroundView(effect: UIBlurEffect(style: .regular))
-//        view.effect = UIVibrancyEffect(blurEffect: UIBlurEffect(style: .regular))
         
         let cornerRadius = backgroundTopInset / 2
         view.layer.cornerRadius = cornerRadius
@@ -160,8 +162,10 @@ class PanelController: NSObject {
     
     override init() {
         super.init()
-        
         setupViews()
+        scrollViewObserver.didUpdate = { [weak self] scrollView in
+            self?.updateScrollView(scrollView)
+        }
     }
 }
 
@@ -192,7 +196,7 @@ private extension PanelController {
         containerView.addSubview(headerShadowView)
     }
     
-    func updateScrollViewInsets() {
+    func updateScrollView(_ scrollView: UIScrollView) {
         // Set top inset so content is aligned to bottom
         let availableArea = scrollView.frame.inset(by: scrollView.safeAreaInsets).size
         scrollView.contentInset.top = max(0, availableArea.height - scrollView.contentSize.height)
@@ -238,27 +242,6 @@ private extension PanelController {
             viewController.view.addSubview(containerView)
         }
         
-        scrollContentSizeObserver = scrollView.observe(\.contentSize, options: [.old, .new]) { [weak self] _, change in
-            guard change.oldValue != change.newValue else {
-                return
-            }
-            self?.updateScrollViewInsets()
-        }
-        
-        scrollFrameObserver = scrollView.observe(\.frame, options: [.old, .new]) { [weak self] _, change in
-            guard change.oldValue != change.newValue else {
-                return
-            }
-            self?.updateScrollViewInsets()
-        }
-        
-        scrollContentOffsetObserver = scrollView.observe(\.contentOffset, options: [.old, .new]) { [weak self] _, change in
-            guard change.oldValue != change.newValue else {
-                return
-            }
-            self?.updateScrollViewInsets()
-        }
-        
         setupViewConstraints()
         setupGestureRecognizers()
     }
@@ -272,6 +255,7 @@ private extension PanelController {
             scrollView.superview?.removeConstraints(constraintsToRemove)
         }
         scrollView.backgroundColor = .clear
+        scrollViewObserver.scrollView = scrollView
     }
     
     func setupViewConstraints() {
@@ -308,7 +292,7 @@ private extension PanelController {
             $0.heightAnchor.constraint(equalToConstant: headerShadowHeight)
             $0.topAnchor.constraint(equalTo: headerView.bottomAnchor)
         }
-        updateScrollViewInsets()
+        updateScrollView(scrollView)
     }
     
     func setupBackgroundViews(in containerView: UIView) {
@@ -336,7 +320,7 @@ private extension PanelController {
         headerView.applyConstraints {
             $0.topAnchor.constraint(equalTo: backgroundView.topAnchor)
         }
-        updateScrollViewInsets()
+        updateScrollView(scrollView)
     }
     
     func setupGestureRecognizers() {

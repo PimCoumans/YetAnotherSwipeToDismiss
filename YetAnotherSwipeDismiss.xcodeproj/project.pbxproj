@@ -10,13 +10,14 @@
 		3E294990288ED5F1005DFFE8 /* UIScrollView+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E29498F288ED5F1005DFFE8 /* UIScrollView+Convenience.swift */; };
 		3E43E627287AFBD100B2436E /* PanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E43E626287AFBD100B2436E /* PanelController.swift */; };
 		3E43E629287B068100B2436E /* SimpleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E43E628287B068100B2436E /* SimpleViewController.swift */; };
+		3E797C012890790C00EC8E1F /* ScrollViewObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */; };
 		3E90A7F92878921C00AE01F6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A7F82878921C00AE01F6 /* AppDelegate.swift */; };
 		3E90A7FB2878921C00AE01F6 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A7FA2878921C00AE01F6 /* SceneDelegate.swift */; };
 		3E90A7FD2878921C00AE01F6 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A7FC2878921C00AE01F6 /* ViewController.swift */; };
 		3E90A8002878921C00AE01F6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3E90A7FE2878921C00AE01F6 /* Main.storyboard */; };
 		3E90A8022878921C00AE01F6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E90A8012878921C00AE01F6 /* Assets.xcassets */; };
 		3E90A8052878921C00AE01F6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3E90A8032878921C00AE01F6 /* LaunchScreen.storyboard */; };
-		3E90A8112878967500AE01F6 /* UIView+LayoutConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */; };
+		3E90A8112878967500AE01F6 /* ConstraintBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */; };
 		3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A816287A0EE700AE01F6 /* StackViewController.swift */; };
 		3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBD9E282889B6F000023DFE /* TableViewController.swift */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,7 @@
 		3E29498F288ED5F1005DFFE8 /* UIScrollView+Convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+Convenience.swift"; sourceTree = "<group>"; };
 		3E43E626287AFBD100B2436E /* PanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelController.swift; sourceTree = "<group>"; };
 		3E43E628287B068100B2436E /* SimpleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleViewController.swift; sourceTree = "<group>"; };
+		3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewObserver.swift; sourceTree = "<group>"; };
 		3E90A7F52878921C00AE01F6 /* YetAnotherSwipeDismiss.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YetAnotherSwipeDismiss.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E90A7F82878921C00AE01F6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3E90A7FA2878921C00AE01F6 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -33,7 +35,7 @@
 		3E90A8012878921C00AE01F6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3E90A8042878921C00AE01F6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3E90A8062878921C00AE01F6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+LayoutConvenience.swift"; sourceTree = "<group>"; };
+		3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintBuilder.swift; sourceTree = "<group>"; };
 		3E90A816287A0EE700AE01F6 /* StackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackViewController.swift; sourceTree = "<group>"; };
 		3EBD9E282889B6F000023DFE /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -52,11 +54,20 @@
 		3E43E625287AFBB900B2436E /* PanelController */ = {
 			isa = PBXGroup;
 			children = (
-				3E90A8102878967500AE01F6 /* UIView+LayoutConvenience.swift */,
+				3E797BFF289078ED00EC8E1F /* Extensions */,
 				3E43E626287AFBD100B2436E /* PanelController.swift */,
-				3E29498F288ED5F1005DFFE8 /* UIScrollView+Convenience.swift */,
+				3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */,
 			);
 			path = PanelController;
+			sourceTree = "<group>";
+		};
+		3E797BFF289078ED00EC8E1F /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */,
+				3E29498F288ED5F1005DFFE8 /* UIScrollView+Convenience.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		3E90A7EC2878921C00AE01F6 = {
@@ -167,9 +178,10 @@
 				3E90A7FD2878921C00AE01F6 /* ViewController.swift in Sources */,
 				3E294990288ED5F1005DFFE8 /* UIScrollView+Convenience.swift in Sources */,
 				3E43E627287AFBD100B2436E /* PanelController.swift in Sources */,
+				3E797C012890790C00EC8E1F /* ScrollViewObserver.swift in Sources */,
 				3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */,
 				3E90A7F92878921C00AE01F6 /* AppDelegate.swift in Sources */,
-				3E90A8112878967500AE01F6 /* UIView+LayoutConvenience.swift in Sources */,
+				3E90A8112878967500AE01F6 /* ConstraintBuilder.swift in Sources */,
 				3E43E629287B068100B2436E /* SimpleViewController.swift in Sources */,
 				3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */,
 				3E90A7FB2878921C00AE01F6 /* SceneDelegate.swift in Sources */,
