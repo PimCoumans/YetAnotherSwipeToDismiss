@@ -37,8 +37,6 @@ class PanelController: NSObject {
     let headerShadowHeight: CGFloat = 2
     var backgroundTopConstraint: NSLayoutConstraint?
     
-    let showColors: Bool = false
-    
     private class PanelScrollView: UIScrollView {
         override func touchesShouldCancel(in view: UIView) -> Bool {
             return true
@@ -73,9 +71,6 @@ class PanelController: NSObject {
         scrollView.alwaysBounceVertical = true
         scrollView.canCancelContentTouches = true
         scrollView.panGestureRecognizer.cancelsTouchesInView = true
-        if showColors {
-            scrollView.backgroundColor = .green.withAlphaComponent(0.2)
-        }
         scrollViewObserver.scrollView = scrollView
         return scrollView
     }()
@@ -91,9 +86,7 @@ class PanelController: NSObject {
     
     private var startedGestureInHeaderView: Bool = false
     private var dismissGestureVelocity: CGFloat = 0
-    private var viewsToTranslate: [UIView] {
-        [containerView, backgroundView, scrollView].filter { $0.superview != containerView }
-    }
+    private var viewsToTranslate: [UIView] { [containerView, backgroundView] }
     
     private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -110,9 +103,6 @@ class PanelController: NSObject {
     private lazy var scrollContentView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        if showColors {
-            view.backgroundColor = .black.withAlphaComponent(0.2)
-        }
         return view
     }()
     
@@ -128,10 +118,6 @@ class PanelController: NSObject {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.directionalLayoutMargins.leading = backgroundTopInset * 0.4
         view.directionalLayoutMargins.trailing = backgroundTopInset * 0.4
-        
-        if showColors {
-            view.backgroundColor = .blue.withAlphaComponent(0.2)
-        }
         return view
     }()
     
@@ -139,11 +125,7 @@ class PanelController: NSObject {
         let view = PanelHeaderShadowView()
         view.isUserInteractionEnabled = false
         view.translatesAutoresizingMaskIntoConstraints = false
-        if showColors {
-            view.backgroundColor = .red
-        } else {
-            view.backgroundColor = .black.withAlphaComponent(headerShadowOpactity)
-        }
+        view.backgroundColor = .black.withAlphaComponent(headerShadowOpactity)
         view.alpha = 0
         return view
     }()
