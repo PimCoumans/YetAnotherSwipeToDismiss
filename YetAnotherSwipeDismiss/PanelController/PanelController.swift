@@ -384,22 +384,18 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
         if recognizerEnded {
             if recognizer.state == .ended && velocity > 0 && offset > 0 {
                 animateDismissal(velocity: velocity)
-            } else {
-                let wasBouncing = scrollView.bounces
-                scrollView.bounces = true
-                if let transformedOffset = viewsToTranslate.first?.transform.ty, transformedOffset != 0 {
-                    let springVelocity = velocity / -transformedOffset
-                    UIView.animate(
-                        withDuration: 0.6, delay: 0,
-                        usingSpringWithDamping: 0.94, initialSpringVelocity: springVelocity,
-                        options: [.beginFromCurrentState, .allowUserInteraction]
-                    ) {
-                        self.viewsToTranslate.forEach { $0.transform = .identity }
-                    }
-                } else {
-                    print("bouncing back? was \(wasBouncing)")
+            } else if let transformedOffset = viewsToTranslate.first?.transform.ty, transformedOffset != 0 {
+                // Only animate back when views are actually translated, otherwise scrollView bouncing handles it
+                let springVelocity = velocity / -transformedOffset
+                UIView.animate(
+                    withDuration: 0.6, delay: 0,
+                    usingSpringWithDamping: 0.94, initialSpringVelocity: springVelocity,
+                    options: [.beginFromCurrentState, .allowUserInteraction]
+                ) {
+                    self.viewsToTranslate.forEach { $0.transform = .identity }
                 }
             }
+            scrollView.bounces = true
         } else {
             let letScrollViewBounce = offset <= 0 && !scrollView.contentExeedsBounds
             viewsToTranslate.forEach { $0.transform = transform }
