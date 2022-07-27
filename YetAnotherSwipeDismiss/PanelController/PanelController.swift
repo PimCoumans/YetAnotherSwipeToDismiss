@@ -237,6 +237,9 @@ private extension PanelController {
             scrollView.superview?.removeConstraints(constraintsToRemove)
         }
         scrollView.backgroundColor = .clear
+        scrollView.alwaysBounceVertical = true
+        scrollView.canCancelContentTouches = true
+        scrollView.panGestureRecognizer.cancelsTouchesInView = true
         scrollViewObserver.scrollView = scrollView
     }
     
@@ -382,6 +385,7 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
         let recognizerEnded = endStates.contains(recognizer.state)
         
         if recognizerEnded {
+            scrollView.bounces = true
             if recognizer.state == .ended && velocity > 0 && offset > 0 {
                 animateDismissal(velocity: velocity)
             } else if let transformedOffset = viewsToTranslate.first?.transform.ty, transformedOffset != 0 {
@@ -395,7 +399,6 @@ extension PanelController: UIGestureRecognizerDelegate, UIScrollViewDelegate {
                     self.viewsToTranslate.forEach { $0.transform = .identity }
                 }
             }
-            scrollView.bounces = true
         } else {
             let letScrollViewBounce = offset <= 0 && !scrollView.contentExeedsBounds
             viewsToTranslate.forEach { $0.transform = transform }

@@ -17,10 +17,12 @@ extension UIScrollView {
         )
     }
     
+    var pointPrecision: CGFloat { 1 / UIScreen.main.scale }
+    
     /// Content sits at top offset or is scroll-bouncing at top
     var isAtTop: Bool {
         let offset = relativeContentOffset.y
-        return offset < 0 || abs(offset) < UIScreen.main.scale
+        return offset < 0 || abs(offset) < pointPrecision
     }
     
     /// Wether given location is withing scrollView's content
@@ -34,7 +36,7 @@ extension UIScrollView {
     /// If content should be able to scroll without bouncing
     var contentExeedsBounds: Bool {
         let viewHeight = bounds.inset(by: adjustedContentInset).height
-        return contentSize.height > viewHeight
+        return contentSize.height - viewHeight > pointPrecision
     }
 }
 
