@@ -1,12 +1,6 @@
-//
-//  ScrollViewObserver.swift
-//  YetAnotherSwipeDismiss
-//
-//  Created by Pim on 26/07/2022.
-//
-
 import UIKit
 
+/// Uses KVO to watch for `contentSize`, `frame` and `contentOffset` on the set ``scrollView``, so just a way to get scrollView updates without setting a delegate
 class ScrollViewObserver {
     var scrollView: UIScrollView? { didSet {
         updateObservers()

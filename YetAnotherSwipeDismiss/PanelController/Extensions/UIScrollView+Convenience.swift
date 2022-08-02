@@ -1,10 +1,3 @@
-//
-//  UIScrollView+Convenience.swift
-//  YetAnotherSwipeDismiss
-//
-//  Created by Pim on 25/07/2022.
-//
-
 import UIKit
 
 extension UIScrollView {
@@ -17,7 +10,7 @@ extension UIScrollView {
         )
     }
     
-    var pointPrecision: CGFloat { 1 / UIScreen.main.scale }
+    private var pointPrecision: CGFloat { 1 / UIScreen.main.scale }
     
     /// Content sits at top offset or is scroll-bouncing at top
     var isAtTop: Bool {
@@ -42,11 +35,15 @@ extension UIScrollView {
 
 extension UIScrollView {
     /// Immediately halts scrolling and clamps offset to scrollable bounds
-    func stopScrolling() {
+	/// - Returns: Relative change in vertical offset after clamping
+    @discardableResult
+    func stopVerticalScrolling() -> CGFloat {
         var contentOffset = self.contentOffset
         contentOffset.y = max(-adjustedContentInset.top, contentOffset.y)
         let contentHeight = contentSize.height + adjustedContentInset.bottom
         contentOffset.y = min(max(-adjustedContentInset.top, contentHeight - bounds.height), contentOffset.y)
+        let difference = contentOffset.y - self.contentOffset.y
         setContentOffset(contentOffset, animated: false)
+        return difference
     }
 }

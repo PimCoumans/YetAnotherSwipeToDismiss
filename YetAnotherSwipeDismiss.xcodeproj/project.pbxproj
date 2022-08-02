@@ -20,6 +20,8 @@
 		3E90A8112878967500AE01F6 /* ConstraintBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */; };
 		3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90A816287A0EE700AE01F6 /* StackViewController.swift */; };
 		3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBD9E282889B6F000023DFE /* TableViewController.swift */; };
+		3ECD96A32899829A000D0171 /* PanelScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A22899829A000D0171 /* PanelScrollView.swift */; };
+		3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A428998E40000D0171 /* PanelPresentable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +40,8 @@
 		3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintBuilder.swift; sourceTree = "<group>"; };
 		3E90A816287A0EE700AE01F6 /* StackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackViewController.swift; sourceTree = "<group>"; };
 		3EBD9E282889B6F000023DFE /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
+		3ECD96A22899829A000D0171 /* PanelScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelScrollView.swift; sourceTree = "<group>"; };
+		3ECD96A428998E40000D0171 /* PanelPresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPresentable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +61,7 @@
 				3E797BFF289078ED00EC8E1F /* Extensions */,
 				3E43E626287AFBD100B2436E /* PanelController.swift */,
 				3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */,
+				3ECD96A428998E40000D0171 /* PanelPresentable.swift */,
 			);
 			path = PanelController;
 			sourceTree = "<group>";
@@ -66,6 +71,7 @@
 			children = (
 				3E90A8102878967500AE01F6 /* ConstraintBuilder.swift */,
 				3E29498F288ED5F1005DFFE8 /* UIScrollView+Convenience.swift */,
+				3ECD96A22899829A000D0171 /* PanelScrollView.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -181,6 +187,8 @@
 				3E797C012890790C00EC8E1F /* ScrollViewObserver.swift in Sources */,
 				3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */,
 				3E90A7F92878921C00AE01F6 /* AppDelegate.swift in Sources */,
+				3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */,
+				3ECD96A32899829A000D0171 /* PanelScrollView.swift in Sources */,
 				3E90A8112878967500AE01F6 /* ConstraintBuilder.swift in Sources */,
 				3E43E629287B068100B2436E /* SimpleViewController.swift in Sources */,
 				3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */,
