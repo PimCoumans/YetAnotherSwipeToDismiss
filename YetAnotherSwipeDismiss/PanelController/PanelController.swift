@@ -494,7 +494,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 		if isPresenting(using: transitionContext) {
 			return 0.62
 		} else {
-			return 0.38
+			return 0.32
 		}
 	}
 	
@@ -517,7 +517,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			setupBackgroundViewConstraints()
 		}
 		
-		let fullOffset = scrollView.contentSize.height + headerViewHeight + containerView.safeAreaInsets.bottom
+		let fullOffset = min(containerView.bounds.inset(by: containerView.safeAreaInsets).height, scrollView.contentSize.height + headerViewHeight) + containerView.safeAreaInsets.bottom
 		let fullDuration = transitionDuration(using: transitionContext)
 		let duration = max(0.15, fullDuration * ((fullOffset / containerView.bounds.height) * 0.75))
 		
