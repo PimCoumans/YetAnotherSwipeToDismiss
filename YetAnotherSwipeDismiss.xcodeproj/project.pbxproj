@@ -22,6 +22,7 @@
 		3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBD9E282889B6F000023DFE /* TableViewController.swift */; };
 		3ECD96A32899829A000D0171 /* PanelScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A22899829A000D0171 /* PanelScrollView.swift */; };
 		3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A428998E40000D0171 /* PanelPresentable.swift */; };
+		3ECD96A72899B12A000D0171 /* ShowTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A62899B12A000D0171 /* ShowTime.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 		3EBD9E282889B6F000023DFE /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		3ECD96A22899829A000D0171 /* PanelScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelScrollView.swift; sourceTree = "<group>"; };
 		3ECD96A428998E40000D0171 /* PanelPresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPresentable.swift; sourceTree = "<group>"; };
+		3ECD96A62899B12A000D0171 /* ShowTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTime.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,10 +60,10 @@
 		3E43E625287AFBB900B2436E /* PanelController */ = {
 			isa = PBXGroup;
 			children = (
-				3E797BFF289078ED00EC8E1F /* Extensions */,
 				3E43E626287AFBD100B2436E /* PanelController.swift */,
-				3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */,
 				3ECD96A428998E40000D0171 /* PanelPresentable.swift */,
+				3E797C002890790C00EC8E1F /* ScrollViewObserver.swift */,
+				3E797BFF289078ED00EC8E1F /* Extensions */,
 			);
 			path = PanelController;
 			sourceTree = "<group>";
@@ -106,6 +108,7 @@
 				3E90A8012878921C00AE01F6 /* Assets.xcassets */,
 				3E90A8032878921C00AE01F6 /* LaunchScreen.storyboard */,
 				3E90A8062878921C00AE01F6 /* Info.plist */,
+				3ECD96A62899B12A000D0171 /* ShowTime.swift */,
 			);
 			path = YetAnotherSwipeDismiss;
 			sourceTree = "<group>";
@@ -185,6 +188,7 @@
 				3E294990288ED5F1005DFFE8 /* UIScrollView+Convenience.swift in Sources */,
 				3E43E627287AFBD100B2436E /* PanelController.swift in Sources */,
 				3E797C012890790C00EC8E1F /* ScrollViewObserver.swift in Sources */,
+				3ECD96A72899B12A000D0171 /* ShowTime.swift in Sources */,
 				3E90A817287A0EE700AE01F6 /* StackViewController.swift in Sources */,
 				3E90A7F92878921C00AE01F6 /* AppDelegate.swift in Sources */,
 				3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */,
