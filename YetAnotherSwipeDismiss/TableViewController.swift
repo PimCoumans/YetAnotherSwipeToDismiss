@@ -14,8 +14,11 @@ class TableViewController: UIViewController, PanelPresentable {
     var panelScrollView: UIScrollView {
         tableView
     }
+	
+	let numberOfCells: Int
     
-    init() {
+	init(cellCount: Int = 8) {
+		numberOfCells = cellCount
         super.init(nibName: nil, bundle: nil)
         panelController.viewController = self
     }
@@ -26,10 +29,6 @@ class TableViewController: UIViewController, PanelPresentable {
         tableView.dataSource = self
         return tableView
     }()
-    
-    
-    let numberOfCells = 8
-    
     
     private lazy var titleView: UILabel = {
         let label = UILabel()

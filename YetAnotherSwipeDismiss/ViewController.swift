@@ -9,18 +9,19 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    let viewControllers = [
-        UIViewController(),
-        SimpleViewController(),
-        StackViewController(),
-        TableViewController()
-    ]
+	enum ViewControllerType: CaseIterable {
+		case simple
+		case stack
+		case smallTableView
+		case bigTableView
+	}
+	
+	let stackView = UIStackView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         
-        let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.alignment = .fill
         stackView.distribution = .fillEqually
@@ -33,24 +34,29 @@ class ViewController: UIViewController {
             $0.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         }
         
-        viewControllers.forEach { viewController in
-            var configuration = UIButton.Configuration.plain()
-            configuration.title = "\(type(of: viewController.self))"
-            let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
-                let newViewController = type(of: viewController).init()
-                if viewController == viewControllers.first {
-                    newViewController.view.backgroundColor = .green
-                }
-                present(newViewController, animated: true)
-            })
-            stackView.addArrangedSubview(button)
-        }
-        
+		ViewControllerType.allCases.forEach { type in
+			var configuration = UIButton.Configuration.borderedProminent()
+			configuration.buttonSize = .large
+			configuration.title = "Show \(type) panel"
+			let button = UIButton(configuration: configuration, primaryAction: UIAction { [unowned self] _ in
+				present(type: type)
+			})
+			stackView.addArrangedSubview(button)
+		}
     }
+	
+	func present(type: ViewControllerType) {
+		switch type {
+			case .simple: present(SimpleViewController(), animated: true)
+			case .stack: present(StackViewController(), animated: true)
+			case .smallTableView: present(TableViewController(), animated: true)
+			case .bigTableView: present(TableViewController(cellCount: 86), animated: true)
+		}
+	}
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        present(viewControllers[2], animated: true)
+//		present(type: .stack)
     }
 }
 

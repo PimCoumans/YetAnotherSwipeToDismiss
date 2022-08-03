@@ -18,13 +18,14 @@ class SimpleViewController: UIViewController, PanelPresentable {
 	
 	private lazy var simpleView: UIView = {
 		let view = UIView()
-		view.backgroundColor = .systemMint
+		view.backgroundColor = .systemMint.withAlphaComponent(0.25)
 		return view
 	}()
 	
 	private lazy var cancelButton: UIButton = {
-		let button = UIButton(type: .system)
-		button.setTitle("Cancel", for: .normal)
+		var configuration = UIButton.Configuration.plain()
+		configuration.title = "Cancel"
+		let button = UIButton(configuration: configuration)
 		button.addAction(UIAction { [unowned self] _ in
 			self.presentingViewController?.dismiss(animated: true)
 		}, for: .touchUpInside)
@@ -35,10 +36,8 @@ class SimpleViewController: UIViewController, PanelPresentable {
 		fatalError("init(coder:) has not been implemented")
 	}
 	
-	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		view.tintColor = .black
 		
 		contentView.addSubview(simpleView)
 		simpleView.extendToSuperview()
