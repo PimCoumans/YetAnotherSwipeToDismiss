@@ -289,10 +289,12 @@ private extension PanelController {
 	
 	/// Called whenever any layout properties of `scrollView` changes
 	func updateScrollView(_ scrollView: UIScrollView) {
-		// Set top inset so content is aligned to bottom
-		let availableArea = scrollView.frame.inset(by: scrollView.safeAreaInsets).size
-		scrollView.contentInset.top = max(0, availableArea.height - bottomBounceAllowance - scrollView.contentSize.height)
+		// ScrollView‘s bottom extends by `bottomBounceAllowance`
 		scrollView.contentInset.bottom = bottomBounceAllowance
+		let scrollViewHeight = scrollView.frame.inset(by: scrollView.safeAreaInsets).height - bottomBounceAllowance
+		let contentHeight = scrollView.contentSize.height
+		// Set top inset so content is always aligned to bottom
+		scrollView.contentInset.top = max(0, scrollViewHeight - contentHeight)
 		
 		let scrollOffset = scrollView.relativeContentOffset.y
 		
