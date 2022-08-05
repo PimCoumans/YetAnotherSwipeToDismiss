@@ -54,6 +54,10 @@ extension UIView {
     func extendToSuperviewSafeArea() {
         superview.map(\.safeAreaLayoutGuide).map(extend(to:))
     }
+	
+	func extendToSuperviewLayoutMargins() {
+		superview.map(\.layoutMarginsGuide).map(extend(to:))
+	}
     
     func centerInSuperview() {
         superview.map(center(in:))

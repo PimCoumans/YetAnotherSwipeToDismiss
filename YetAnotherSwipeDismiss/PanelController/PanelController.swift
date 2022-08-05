@@ -22,6 +22,8 @@ class PanelController: NSObject {
 		headerView
 	}
 	
+	let backgroundViewEffect: UIVisualEffect?
+	
 	/// Default scrollView used to display contents
 	private(set) lazy var panelScrollView: PanelScrollView = {
 		let scrollView = PanelScrollView()
@@ -32,6 +34,18 @@ class PanelController: NSObject {
 		return scrollView
 	}()
 	
+	/// Immediatley updates panel height when content has changed. When `animated` is set to `true`, this just wraps ``layoutIfNeeded()`` in a spring-based animation.
+	/// - Parameter animated: Wether the height change should be animated
+	func updatePanelHeight(animated: Bool = true) {
+		if animated {
+			UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.86, initialSpringVelocity: 0, options: .allowUserInteraction) {
+				self.layoutIfNeeded()
+			}
+		} else {
+			self.layoutIfNeeded()
+		}
+	}
+	
 	/// Call this method from a UIView animation to animate height changes
 	func layoutIfNeeded() {
 		viewController?.view.layoutIfNeeded()
@@ -40,6 +54,8 @@ class PanelController: NSObject {
 	
 	/// Height of view placed above scrollView
 	private let headerViewHeight: CGFloat = 65
+	/// Can be updated from ``viewController``'s protocol method `panelTopInset`
+	private var panelTopInset: CGFloat = 10
 	private let headerShadowHeight: CGFloat = 2
 	/// Extend scrollView height allowing for views bouncing up
 	private let bottomBounceAllowance: CGFloat = 100
@@ -61,6 +77,7 @@ class PanelController: NSObject {
 	
 	private var startedGestureInHeaderView: Bool = false
 	private var dismissGestureVelocity: CGFloat = 0
+	private var presenterTintAdjustmentMode: UIView.TintAdjustmentMode = .automatic
 	
 	private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
 		let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -106,7 +123,7 @@ class PanelController: NSObject {
 	}()
 	
 	private(set) lazy var backgroundView: UIView = {
-		let view = PanelBackgroundView(effect: UIBlurEffect(style: .regular))
+		let view = PanelBackgroundView(effect: backgroundViewEffect)
 		
 		let cornerRadius = headerViewHeight / 2
 		view.layer.cornerRadius = cornerRadius
@@ -117,7 +134,8 @@ class PanelController: NSObject {
 		return view
 	}()
 	
-	override init() {
+	init(backgroundViewEffect: UIVisualEffect? = UIBlurEffect(style: .regular)) {
+		self.backgroundViewEffect = backgroundViewEffect
 		super.init()
 		setupViews()
 		scrollViewObserver.didUpdate = { [weak self] scrollView in
@@ -167,6 +185,8 @@ private extension PanelController {
 		guard let viewController = viewController else {
 			return
 		}
+		panelTopInset = viewController.panelTopInset
+		containerView.layoutMargins.top = headerViewHeight + panelTopInset
 		if isScrollViewCustom {
 			panelScrollView.removeFromSuperview()
 			prepareCustomScrollView(scrollView)
@@ -200,7 +220,7 @@ private extension PanelController {
 private extension PanelController {
 	
 	func setupViews() {
-		containerView.layoutMargins.top = headerViewHeight
+		containerView.layoutMargins.top = headerViewHeight + panelTopInset
 		
 		scrollView.addSubview(scrollContentView)
 		
@@ -254,18 +274,16 @@ private extension PanelController {
 	func setupBackgroundViewConstraints() {
 		dimmingView.extendToSuperview()
 		
-		let topInset = headerViewHeight
-		
 		// Align to bottom of screen when possible
 		let bottomAnchor = viewController?.view.bottomAnchor ?? containerView.bottomAnchor
 		// Align to scrollView‘s top inset. Constraint will be updated when scrollView updates
-		backgroundTopConstraint = backgroundView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: topInset)
+		backgroundTopConstraint = backgroundView.topAnchor.constraint(equalTo: containerView.layoutMarginsGuide.topAnchor)
 		backgroundTopConstraint?.priority = .defaultLow
 		
 		backgroundView.applyConstraints {
 			$0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
 			$0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
-			$0.topAnchor.constraint(greaterThanOrEqualTo: containerView.safeAreaLayoutGuide.topAnchor)
+			$0.topAnchor.constraint(greaterThanOrEqualTo: containerView.layoutMarginsGuide.topAnchor, constant: -headerViewHeight)
 			
 			$0.bottomAnchor.constraint(equalTo: bottomAnchor, constant: bottomBounceAllowance)
 			backgroundTopConstraint!
@@ -309,7 +327,7 @@ private extension PanelController {
 			}
 		}
 		
-		backgroundTopConstraint?.constant = scrollView.contentInset.top - scrollOffset
+		backgroundTopConstraint?.constant = scrollView.contentInset.top - scrollOffset - headerViewHeight
 		
 		// Make top of scroll indicator never extend beyond top of content
 		let topScrollOvershoot = min(0, scrollOffset)
@@ -498,16 +516,22 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 		}
 	}
 	
-	func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+	func animateTransition(using context: UIViewControllerContextTransitioning) {
 		
-		let isPresenting = isPresenting(using: transitionContext)
+		let isPresenting = isPresenting(using: context)
+		let presenterViewKey: UITransitionContextViewKey = isPresenting ? .from : .to
+		let presenterViewControllerKey: UITransitionContextViewControllerKey = isPresenting ? .from : .to
+		let presenterView = context.view(forKey: presenterViewKey) ?? context.viewController(forKey: presenterViewControllerKey)?.view
 		
 		if isPresenting {
-			setupBackgroundViews(in: transitionContext.containerView)
+			if let view = presenterView {
+				presenterTintAdjustmentMode = view.tintAdjustmentMode
+			}
+			setupBackgroundViews(in: context.containerView)
 		}
 		
-		if let toView = transitionContext.view(forKey: .to) {
-			transitionContext.containerView.addSubview(toView)
+		if let toView = context.view(forKey: .to) {
+			context.containerView.addSubview(toView)
 			ensureViewHierarchy()
 			toView.setNeedsLayout()
 			toView.layoutIfNeeded()
@@ -518,7 +542,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 		}
 		
 		let fullOffset = min(containerView.bounds.inset(by: containerView.safeAreaInsets).height, scrollView.contentSize.height + headerViewHeight) + containerView.safeAreaInsets.bottom
-		let fullDuration = transitionDuration(using: transitionContext)
+		let fullDuration = transitionDuration(using: context)
 		let duration = max(0.15, fullDuration * ((fullOffset / containerView.bounds.height) * 0.75))
 		
 		if isPresenting {
@@ -526,6 +550,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			translateViews(withOffset: fullOffset)
 			
 			UIView.animate(withDuration: fullDuration * 0.35, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+				presenterView?.tintAdjustmentMode = .dimmed
 				self.dimmingView.alpha = 1
 			}
 			
@@ -537,7 +562,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 				self.dimmingView.alpha = 1
 				self.translateViews(withOffset: nil)
 			} completion: { finished in
-				transitionContext.completeTransition(finished)
+				context.completeTransition(finished)
 			}
 		} else {
 			let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn
@@ -547,10 +572,11 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			let dismissDuration = min(duration, distanceToCover / dismissGestureVelocity)
 			
 			UIView.animate(withDuration: dismissDuration, delay: 0, options: options) {
+				presenterView?.tintAdjustmentMode = self.presenterTintAdjustmentMode
 				self.dimmingView.alpha = 0
 				self.translateViews(withOffset: fullOffset)
 			} completion: { finished in
-				transitionContext.completeTransition(finished)
+				context.completeTransition(finished)
 			}
 		}
 	}

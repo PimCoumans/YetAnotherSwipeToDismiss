@@ -68,10 +68,10 @@ class StackViewController: UIViewController, PanelPresentable {
 		super.viewDidLoad()
 		
 		contentView.addSubview(stackView)
-		stackView.extend(to: contentView.layoutMarginsGuide)
+		stackView.extendToSuperviewLayoutMargins()
 		
 		headerContentView.addSubview(buttonStackView)
-		buttonStackView.extend(to: headerContentView.layoutMarginsGuide)
+		buttonStackView.extendToSuperviewLayoutMargins()
 		
 		buttonStackView.addArrangedSubview(removeButton)
 		buttonStackView.addArrangedSubview(addALotButton)

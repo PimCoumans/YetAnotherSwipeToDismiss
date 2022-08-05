@@ -13,15 +13,29 @@ import UIKit
 ///         super.init(nibName: nil, bundle: nil)
 ///         panelController.viewController = self
 ///     }
+///
+///     func viewDidLoad() {
+///         super.viewDidLoad()
+///
+///         // Add views to `contentView` (from `PanelPresentable`)
+///         // or to `panelController.contentView` so they‘re added
+///         // to the scrollView
+///         let someView = UIView()
+///         contentView.addSubview(someView)
+///
+///         // .. set auto layout constraints
+///     }
 /// }
 
 protocol PanelPresentable: UIViewController {
 	var panelController: PanelController { get }
 	var panelScrollView: UIScrollView { get }
+	var panelTopInset: CGFloat { get }
 }
 
 extension PanelPresentable {
 	var panelScrollView: UIScrollView { panelController.panelScrollView }
+	var panelTopInset: CGFloat { 10 }
 	
 	var contentView: UIView { panelController.contentView }
 	var headerContentView: UIView { panelController.headerContentView }
