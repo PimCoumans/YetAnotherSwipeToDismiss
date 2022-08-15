@@ -17,11 +17,11 @@ import UIKit
 ///     func viewDidLoad() {
 ///         super.viewDidLoad()
 ///
-///         // Add views to `contentView` (from `PanelPresentable`)
-///         // or to `panelController.contentView` so they‘re added
-///         // to the scrollView
+///         // Your view will be added to `panelController.contentView`
+///         // so any constraints sizing your view will size the
+///         // panel‘s scrollView
 ///         let someView = UIView()
-///         contentView.addSubview(someView)
+///         view.addSubview(someView)
 ///
 ///         // .. set auto layout constraints
 ///     }
@@ -29,7 +29,11 @@ import UIKit
 
 protocol PanelPresentable: UIViewController {
 	var panelController: PanelController { get }
+	
+	/// Override to provide your own scroll view to use for dismissing logic
 	var panelScrollView: UIScrollView { get }
+	
+	/// Set an additional top inset from the screen‘s top
 	var panelTopInset: CGFloat { get }
 }
 
@@ -37,6 +41,11 @@ extension PanelPresentable {
 	var panelScrollView: UIScrollView { panelController.panelScrollView }
 	var panelTopInset: CGFloat { 10 }
 	
-	var contentView: UIView { panelController.contentView }
 	var headerContentView: UIView { panelController.headerContentView }
+}
+
+extension UIViewController {
+	var presentingPanelController: PanelController? {
+		transitioningDelegate as? PanelController
+	}
 }

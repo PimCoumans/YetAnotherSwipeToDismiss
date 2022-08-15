@@ -9,7 +9,7 @@ import UIKit
 
 class StackViewController: UIViewController, PanelPresentable {
 	
-	let panelController = PanelController()
+	let panelController: PanelController = PanelController()
 	
 	private lazy var buttonStackView: UIStackView = {
 		let stackView = UIStackView()
@@ -67,7 +67,7 @@ class StackViewController: UIViewController, PanelPresentable {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		contentView.addSubview(stackView)
+		view.addSubview(stackView)
 		stackView.extendToSuperviewLayoutMargins()
 		
 		headerContentView.addSubview(buttonStackView)

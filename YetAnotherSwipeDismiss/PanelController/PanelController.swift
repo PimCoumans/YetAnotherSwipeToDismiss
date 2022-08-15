@@ -2,7 +2,7 @@ import UIKit
 
 class PanelController: NSObject {
 	
-	weak var viewController: PanelPresentable? { didSet {
+	weak var viewController: UIViewController? { didSet {
 		setupViewController()
 	}}
 	
@@ -14,15 +14,32 @@ class PanelController: NSObject {
 		headerShadowView.backgroundColor = UIColor(white: 0, alpha: headerShadowOpactity)
 	}}
 	
-	var contentView: UIView {
-		scrollContentView
-	}
-	
 	var headerContentView: UIView {
 		headerView
 	}
 	
 	let backgroundViewEffect: UIVisualEffect?
+	
+	init(backgroundViewEffect: UIVisualEffect? = UIBlurEffect(style: .regular)) {
+		self.backgroundViewEffect = backgroundViewEffect
+		super.init()
+		commonInit()
+	}
+	
+	init(viewController: UIViewController, backgroundViewEffect: UIVisualEffect? = UIBlurEffect(style: .regular)) {
+		self.viewController = viewController
+		self.backgroundViewEffect = backgroundViewEffect
+		super.init()
+		commonInit()
+	}
+	
+	private func commonInit() {
+		setupViewController()
+		setupViews()
+		scrollViewObserver.didUpdate = { [weak self] scrollView in
+			self?.updateScrollView(scrollView)
+		}
+	}
 	
 	/// Default scrollView used to display contents
 	private(set) lazy var panelScrollView: PanelScrollView = {
@@ -72,7 +89,7 @@ class PanelController: NSObject {
 	}
 	
 	private var scrollView: UIScrollView {
-		viewController?.panelScrollView ?? panelScrollView
+		(viewController as? PanelPresentable)?.panelScrollView ?? panelScrollView
 	}
 	
 	private var startedGestureInHeaderView: Bool = false
@@ -133,15 +150,6 @@ class PanelController: NSObject {
 		view.contentMode = .redraw
 		return view
 	}()
-	
-	init(backgroundViewEffect: UIVisualEffect? = UIBlurEffect(style: .regular)) {
-		self.backgroundViewEffect = backgroundViewEffect
-		super.init()
-		setupViews()
-		scrollViewObserver.didUpdate = { [weak self] scrollView in
-			self?.updateScrollView(scrollView)
-		}
-	}
 }
 
 // MARK: Custom class names (mostly for view inspection)
@@ -152,6 +160,9 @@ extension PanelController {
 	private class PanelHeaderContentView: UIView { }
 	private class PanelHeaderShadowView: UIView { }
 	private class PanelBackgroundView: UIVisualEffectView { }
+	private class PanelPresentationController: UIPresentationController {
+		var panelController: PanelController?
+	}
 }
 
 // MARK: - Setting up view controller
@@ -165,12 +176,11 @@ private extension PanelController {
 	}
 	
 	/// Makes sure containerView is added to the view hierarchy
-	func ensureViewHierarchy() {
-		guard containerView.superview == nil, let panelPresentable = viewController else {
+	func ensureViewHierarchy(forceViewLoaded: Bool = false) {
+		guard let viewController = viewController else {
 			return
 		}
-		let viewController = panelPresentable as UIViewController
-		if viewController.isViewLoaded == true {
+		if viewController.isViewLoaded == true || forceViewLoaded {
 			setupViewControllerView()
 		} else if viewObserver != nil {
 			// Wait for `viewController.view` to be loaded
@@ -182,21 +192,23 @@ private extension PanelController {
 	}
 	
 	func setupViewControllerView() {
-		guard let viewController = viewController else {
+		guard let viewController = viewController, viewController.view.superview == nil else {
 			return
 		}
-		panelTopInset = viewController.panelTopInset
+		if let viewController = viewController as? PanelPresentable {
+			panelTopInset = viewController.panelTopInset
+		}
 		containerView.layoutMargins.top = headerViewHeight + panelTopInset
 		if isScrollViewCustom {
 			panelScrollView.removeFromSuperview()
 			prepareCustomScrollView(scrollView)
-			viewController.view.insertSubview(containerView, belowSubview: scrollView)
 			containerView.insertSubview(scrollView, at: 0)
+			containerView.insertSubview(viewController.view, belowSubview: scrollView)
 		} else {
-			viewController.view.addSubview(containerView)
+			scrollContentView.addSubview(viewController.view)
+			viewController.view.extendToSuperview()
 		}
 		
-		setupViewConstraints()
 		setupGestureRecognizers()
 	}
 	
@@ -230,8 +242,6 @@ private extension PanelController {
 	}
 	
 	func setupViewConstraints() {
-		containerView.extendToSuperview()
-		
 		let topHeight = headerViewHeight
 		
 		scrollView.applyConstraints {
@@ -275,7 +285,7 @@ private extension PanelController {
 		dimmingView.extendToSuperview()
 		
 		// Align to bottom of screen when possible
-		let bottomAnchor = viewController?.view.bottomAnchor ?? containerView.bottomAnchor
+		let bottomAnchor = containerView.bottomAnchor
 		// Align to scrollView‘s top inset. Constraint will be updated when scrollView updates
 		backgroundTopConstraint = backgroundView.topAnchor.constraint(equalTo: containerView.layoutMarginsGuide.topAnchor)
 		backgroundTopConstraint?.priority = .defaultLow
@@ -500,6 +510,13 @@ extension PanelController: UIViewControllerTransitioningDelegate {
 	func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
 		return self
 	}
+	
+	func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+		let controller = PanelPresentationController(presentedViewController: presented, presenting: presenting)
+		// Trick to retain panelController when not set through `PanelPresentable`
+		controller.panelController = self
+		return controller
+	}
 }
 
 extension PanelController: UIViewControllerAnimatedTransitioning {
@@ -527,17 +544,15 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			if let view = presenterView {
 				presenterTintAdjustmentMode = view.tintAdjustmentMode
 			}
+			
+			context.containerView.addSubview(containerView)
+			containerView.extendToSuperview()
 			setupBackgroundViews(in: context.containerView)
-		}
-		
-		if let toView = context.view(forKey: .to) {
-			context.containerView.addSubview(toView)
-			ensureViewHierarchy()
-			toView.setNeedsLayout()
-			toView.layoutIfNeeded()
-		}
-		
-		if isPresenting {
+			
+			ensureViewHierarchy(forceViewLoaded: true)
+			setupViewConstraints()
+			context.containerView.setNeedsLayout()
+			context.containerView.layoutIfNeeded()
 			setupBackgroundViewConstraints()
 		}
 		

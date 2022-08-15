@@ -23,6 +23,7 @@
 		3ECD96A32899829A000D0171 /* PanelScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A22899829A000D0171 /* PanelScrollView.swift */; };
 		3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A428998E40000D0171 /* PanelPresentable.swift */; };
 		3ECD96A72899B12A000D0171 /* ShowTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECD96A62899B12A000D0171 /* ShowTime.swift */; };
+		3EDB045B28AAA043001017ED /* UnsuspectingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDB045A28AAA043001017ED /* UnsuspectingViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		3ECD96A22899829A000D0171 /* PanelScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelScrollView.swift; sourceTree = "<group>"; };
 		3ECD96A428998E40000D0171 /* PanelPresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPresentable.swift; sourceTree = "<group>"; };
 		3ECD96A62899B12A000D0171 /* ShowTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTime.swift; sourceTree = "<group>"; };
+		3EDB045A28AAA043001017ED /* UnsuspectingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsuspectingViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,8 +100,9 @@
 			isa = PBXGroup;
 			children = (
 				3E43E625287AFBB900B2436E /* PanelController */,
-				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
+				3EDB045A28AAA043001017ED /* UnsuspectingViewController.swift */,
 				3E43E628287B068100B2436E /* SimpleViewController.swift */,
+				3E90A816287A0EE700AE01F6 /* StackViewController.swift */,
 				3EBD9E282889B6F000023DFE /* TableViewController.swift */,
 				3E90A7F82878921C00AE01F6 /* AppDelegate.swift */,
 				3E90A7FA2878921C00AE01F6 /* SceneDelegate.swift */,
@@ -194,6 +197,7 @@
 				3ECD96A528998E40000D0171 /* PanelPresentable.swift in Sources */,
 				3ECD96A32899829A000D0171 /* PanelScrollView.swift in Sources */,
 				3E90A8112878967500AE01F6 /* ConstraintBuilder.swift in Sources */,
+				3EDB045B28AAA043001017ED /* UnsuspectingViewController.swift in Sources */,
 				3E43E629287B068100B2436E /* SimpleViewController.swift in Sources */,
 				3EBD9E292889B6F000023DFE /* TableViewController.swift in Sources */,
 				3E90A7FB2878921C00AE01F6 /* SceneDelegate.swift in Sources */,

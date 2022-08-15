@@ -9,7 +9,7 @@ import UIKit
 
 class TableViewController: UIViewController, PanelPresentable {
     
-    let panelController = PanelController()
+    let panelController: PanelController = PanelController()
     
     var panelScrollView: UIScrollView {
         tableView
