@@ -544,16 +544,16 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			if let view = presenterView {
 				presenterTintAdjustmentMode = view.tintAdjustmentMode
 			}
+			setupBackgroundViews(in: context.containerView)
 			
 			context.containerView.addSubview(containerView)
 			containerView.extendToSuperview()
-			setupBackgroundViews(in: context.containerView)
-			
 			ensureViewHierarchy(forceViewLoaded: true)
 			setupViewConstraints()
+			setupBackgroundViewConstraints()
+			
 			context.containerView.setNeedsLayout()
 			context.containerView.layoutIfNeeded()
-			setupBackgroundViewConstraints()
 		}
 		
 		let fullOffset = min(containerView.bounds.inset(by: containerView.safeAreaInsets).height, scrollView.contentSize.height + headerViewHeight) + containerView.safeAreaInsets.bottom
