@@ -125,6 +125,7 @@ class PanelController: NSObject {
 	private lazy var headerView: UIView = {
 		let view = PanelHeaderContentView()
 		view.translatesAutoresizingMaskIntoConstraints = false
+		view.insetsLayoutMarginsFromSafeArea = false
 		view.directionalLayoutMargins.leading = headerViewHeight * 0.4
 		view.directionalLayoutMargins.trailing = headerViewHeight * 0.4
 		return view
@@ -474,7 +475,7 @@ extension PanelController: UIGestureRecognizerDelegate {
 // MARK: - Setting view offset transforms
 private extension PanelController {
 	/// Views that should move when translating along with dismiss gesture or scrollView bounce
-	var viewsToTranslate: [UIView] { [containerView, backgroundView] }
+	var viewsToTranslate: [UIView] { [scrollView, headerView, headerShadowView, backgroundView] }
 	
 	var currentViewTranslation: CGFloat? {
 		viewsToTranslate.first?.transform.ty
