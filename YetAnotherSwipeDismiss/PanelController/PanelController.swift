@@ -214,13 +214,7 @@ private extension PanelController {
 	}
 	
 	func prepareCustomScrollView(_ scrollView: UIScrollView) {
-		scrollView.removeConstraints(scrollView.constraints)
-		if let constraintsToRemove = scrollView.superview?
-			.constraints
-			.filter({ ($0.firstItem as? UIScrollView) == scrollView })
-		{
-			scrollView.superview?.removeConstraints(constraintsToRemove)
-		}
+		NSLayoutConstraint.deactivate(scrollView.constraints)
 		scrollView.backgroundColor = .clear
 		scrollView.alwaysBounceVertical = true
 		scrollView.canCancelContentTouches = true
