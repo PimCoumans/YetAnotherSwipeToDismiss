@@ -83,18 +83,25 @@ class PanelController: NSObject {
 	
 	private var viewObserver: NSKeyValueObservation?
 	private var scrollViewObserver = ScrollViewObserver()
+	private var panelPresentable: PanelPresentable? {
+		viewController as? PanelPresentable
+	}
 	
 	private var isScrollViewCustom: Bool {
 		scrollView is PanelScrollView == false
 	}
 	
 	private var scrollView: UIScrollView {
-		(viewController as? PanelPresentable)?.panelScrollView ?? panelScrollView
+		panelPresentable?.panelScrollView ?? panelScrollView
 	}
 	
 	private var startedGestureInHeaderView: Bool = false
 	private var dismissGestureVelocity: CGFloat = 0
 	private var presenterTintAdjustmentMode: UIView.TintAdjustmentMode = .automatic
+	
+	private var shouldAdjustPresenterTintMode: Bool {
+		panelPresentable?.shouldAdjustPresenterTintMode ?? true
+	}
 	
 	private lazy var dismissPanGestureRecognizer: UIPanGestureRecognizer = {
 		let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleDismissGestureRecognizer(recognizer:)))
@@ -196,7 +203,7 @@ private extension PanelController {
 		guard let viewController = viewController, viewController.view.superview == nil else {
 			return
 		}
-		if let viewController = viewController as? PanelPresentable {
+		if let viewController = panelPresentable {
 			panelTopInset = viewController.panelTopInset
 		}
 		containerView.layoutMargins.top = headerViewHeight + panelTopInset
@@ -427,32 +434,36 @@ extension PanelController: UIGestureRecognizerDelegate {
 		
 		if recognizerEnded {
 			scrollView.bounces = true
+			let overshoot = max(0, -scrollView.relativeContentOffset.y)
+			let springVelocity = velocity / -(currentViewTranslation + overshoot)
+			
+			func resetScrollViewBounce() {
+				// Animate back with manual spring bouncing, resetting scrollView offset
+				scrollView.stopVerticalScrolling()
+				// Add the scrollView‘s original offset to the transform
+				translateViews(withOffsetTransformer: { $0 + overshoot })
+			}
+			
 			if recognizer.state == .ended && velocity > 0 && offset > 0 {
 				scrollView.showsVerticalScrollIndicator = false
+				resetScrollViewBounce()
 				animateDismissal(velocity: velocity)
-			} else if let transformedOffset = currentViewTranslation, transformedOffset != 0 {
-				if !scrollView.contentExeedsBounds {
+			} else if currentViewTranslation != 0 {
+				guard scrollView.contentExeedsBounds else {
 					// Bounce back along with scrollView (see `updateScrollView(_:)` for more)
-					let multiplier = transformedOffset / -scrollView.relativeContentOffset.y
+					let multiplier = currentViewTranslation / -scrollView.relativeContentOffset.y
 					bounceBackScrollViewMultiplier = multiplier
 					return
-				} else {
-					// Animate back with manual spring bouncing, resetting scrollView offset
-					let overshoot = max(0, -scrollView.relativeContentOffset.y)
-					let springVelocity = velocity / -(transformedOffset + overshoot)
-					scrollView.stopVerticalScrolling()
-					
-					// Add the scrollView‘s original offset to the transform
-					translateViews(withOffsetTransformer: { $0 + overshoot })
-					
-					// Bounce back the views
-					UIView.animate(
-						withDuration: 0.6, delay: 0,
-						usingSpringWithDamping: 0.94, initialSpringVelocity: springVelocity,
-						options: [.beginFromCurrentState, .allowUserInteraction]
-					) {
-						self.translateViews(withOffset: nil)
-					}
+				}
+				
+				// Animate view bounce back when scrollView won't
+				resetScrollViewBounce()
+				UIView.animate(
+					withDuration: 0.6, delay: 0,
+					usingSpringWithDamping: 0.94, initialSpringVelocity: springVelocity,
+					options: [.beginFromCurrentState, .allowUserInteraction]
+				) {
+					self.translateViews(withOffset: nil)
 				}
 			}
 		} else {
@@ -471,8 +482,8 @@ private extension PanelController {
 	/// Views that should move when translating along with dismiss gesture or scrollView bounce
 	var viewsToTranslate: [UIView] { [scrollView, headerView, headerShadowView, backgroundView] }
 	
-	var currentViewTranslation: CGFloat? {
-		viewsToTranslate.first?.transform.ty
+	var currentViewTranslation: CGFloat {
+		viewsToTranslate.first!.transform.ty
 	}
 	
 	func translateViews(withOffsetTransformer transformer: (CGFloat) -> CGFloat?) {
@@ -576,9 +587,7 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			}
 		} else {
 			let options: UIView.AnimationOptions = dismissGestureVelocity > 5 ? .curveLinear : .curveEaseIn
-			let untransformedOffset = containerView.frame.applying(containerView.transform.inverted()).minY
-			let transformedOffset = containerView.frame.minY
-			let distanceToCover = fullOffset - (transformedOffset - untransformedOffset)
+			let distanceToCover = fullOffset - currentViewTranslation
 			let dismissDuration = min(duration, distanceToCover / dismissGestureVelocity)
 			
 			UIView.animate(withDuration: dismissDuration, delay: 0, options: options) {

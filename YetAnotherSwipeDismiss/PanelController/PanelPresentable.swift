@@ -35,11 +35,14 @@ protocol PanelPresentable: UIViewController {
 	
 	/// Set an additional top inset from the screen‘s top
 	var panelTopInset: CGFloat { get }
+	
+	var shouldAdjustPresenterTintMode: Bool { get }
 }
 
 extension PanelPresentable {
 	var panelScrollView: UIScrollView { panelController.panelScrollView }
 	var panelTopInset: CGFloat { 10 }
+	var shouldAdjustPresenterTintMode: Bool { true }
 	
 	var headerContentView: UIView { panelController.headerContentView }
 }
