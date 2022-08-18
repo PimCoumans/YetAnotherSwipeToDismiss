@@ -251,8 +251,8 @@ private extension PanelController {
 		let topHeight = headerViewHeight
 		
 		scrollView.applyConstraints {
-			$0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
-			$0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+			$0.leadingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.leadingAnchor)
+			$0.trailingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.trailingAnchor)
 			$0.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: bottomBounceAllowance)
 			$0.topAnchor.constraint(equalTo: containerView.layoutMarginsGuide.topAnchor)
 		}
