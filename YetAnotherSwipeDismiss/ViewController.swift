@@ -88,22 +88,20 @@ class ViewController: UIViewController {
 		}
 	}
 	
-	func viewController(for type: ViewControllerType) -> UIViewController {
+	func present(type: ViewControllerType) {
+		let viewController: UIViewController
 		switch type {
 		case .unsuspecting:
-			let viewController = UnsuspectingViewController()
+			viewController = UnsuspectingViewController()
 			let panelController = PanelController(backgroundViewEffect: UIBlurEffect(style: .prominent))
 			panelController.viewController = viewController
-			return viewController
-		case .simple: return SimpleViewController()
-		case .stack: return StackViewController()
-		case .smallTableView: return TableViewController()
-		case .bigTableView: return TableViewController(cellCount: 86)
+			present(viewController, animated: true)
+		case .simple: viewController = SimpleViewController()
+		case .stack: viewController = StackViewController()
+		case .smallTableView: viewController = TableViewController()
+		case .bigTableView: viewController = TableViewController(cellCount: 86)
 		}
-	}
-	
-	func present(type: ViewControllerType) {
-		present(viewController(for: type), animated: true)
+		present(viewController, animated: true)
 	}
 }
 
