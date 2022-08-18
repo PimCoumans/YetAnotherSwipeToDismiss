@@ -19,15 +19,9 @@ class UnsuspectingViewController: UIViewController {
 		return view
 	}()
 	
-	private lazy var cancelButton: UIButton = {
-		var configuration = UIButton.Configuration.plain()
-		configuration.title = "Cancel"
-		let button = UIButton(configuration: configuration)
-		button.addAction(UIAction { [unowned self] _ in
-			self.presentingViewController?.dismiss(animated: true)
-		}, for: .touchUpInside)
-		return button
-	}()
+	private lazy var cancelButton: UIButton = compatibleButton(title: "Cancel") { [unowned self] in
+		self.presentingViewController?.dismiss(animated: true)
+	}
 	
 	required init?(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")

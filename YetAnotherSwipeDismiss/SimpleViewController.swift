@@ -18,19 +18,17 @@ class SimpleViewController: UIViewController, PanelPresentable {
 	
 	private lazy var simpleView: UIView = {
 		let view = UIView()
-		view.backgroundColor = .systemMint.withAlphaComponent(0.25)
+		if #available(iOS 15.0, *) {
+			view.backgroundColor = .systemMint.withAlphaComponent(0.25)
+		} else {
+			view.backgroundColor = .green.withAlphaComponent(0.25)
+		}
 		return view
 	}()
 	
-	private lazy var cancelButton: UIButton = {
-		var configuration = UIButton.Configuration.plain()
-		configuration.title = "Cancel"
-		let button = UIButton(configuration: configuration)
-		button.addAction(UIAction { [unowned self] _ in
-			self.presentingViewController?.dismiss(animated: true)
-		}, for: .touchUpInside)
-		return button
-	}()
+	private lazy var cancelButton: UIButton = compatibleButton(title: "Cancel") { [unowned self] in
+		self.presentingViewController?.dismiss(animated: true)
+	}
 	
 	required init?(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")

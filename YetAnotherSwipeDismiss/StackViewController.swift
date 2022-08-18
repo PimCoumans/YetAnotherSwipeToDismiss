@@ -11,40 +11,17 @@ class StackViewController: UIViewController, PanelPresentable {
 	
 	let panelController: PanelController = PanelController()
 	
+	private lazy var addButton: UIButton = compatibleButton(title: "Add", selector: #selector(didPressAddButton))
+	private lazy var addALotButton: UIButton = compatibleButton(title: "Add a lot", selector: #selector(didPressAddALotButton))
+	private lazy var removeButton: UIButton =  compatibleButton(title: "Remove", selector: #selector(didPressRemoveButton))
+	
 	private lazy var buttonStackView: UIStackView = {
-		let stackView = UIStackView()
+		let stackView = UIStackView(arrangedSubviews: [addButton, addALotButton, removeButton])
 		stackView.axis = .horizontal
 		stackView.alignment = .fill
 		stackView.distribution = .equalSpacing
 		stackView.spacing = 20
 		return stackView
-	}()
-	
-	private lazy var addButton: UIButton = {
-		var configuration = UIButton.Configuration.plain()
-		configuration.title = "Add"
-		let button = UIButton(configuration: configuration)
-		button.addTarget(self, action: #selector(didPressAddButton), for: .touchUpInside)
-		button.maximumContentSizeCategory = .accessibilityMedium
-		return button
-	}()
-	
-	private lazy var addALotButton: UIButton = {
-		var configuration = UIButton.Configuration.plain()
-		configuration.title = "Add a lot"
-		let button = UIButton(configuration: configuration)
-		button.addTarget(self, action: #selector(didPressAddALotButton), for: .touchUpInside)
-		button.maximumContentSizeCategory = .accessibilityMedium
-		return button
-	}()
-	
-	private lazy var removeButton: UIButton = {
-		var configuration = UIButton.Configuration.plain()
-		configuration.title = "Remove"
-		let button = UIButton(configuration: configuration)
-		button.addTarget(self, action: #selector(didPressRemoveButton), for: .touchUpInside)
-		button.maximumContentSizeCategory = .accessibilityMedium
-		return button
 	}()
 	
 	private lazy var stackView: UIStackView = {
@@ -72,10 +49,6 @@ class StackViewController: UIViewController, PanelPresentable {
 		
 		headerContentView.addSubview(buttonStackView)
 		buttonStackView.extendToSuperviewLayoutMargins()
-		
-		buttonStackView.addArrangedSubview(removeButton)
-		buttonStackView.addArrangedSubview(addALotButton)
-		buttonStackView.addArrangedSubview(addButton)
 		
 		addLabel(initialAlpha: 1)
 	}
@@ -119,7 +92,7 @@ private extension StackViewController {
 	
 	var randomWord: String {
 		[
-			"enoy",
+			"enjoy",
 			"great",
 			"cat",
 			"powerful",
@@ -209,7 +182,9 @@ private extension StackViewController {
 		label.text = randomWord
 		label.numberOfLines = 0
 		label.textColor = .label
-		label.font = UIFont.systemFont(ofSize: randomFontSize, weight: randomFontWeight)
+		let fontMetrics = UIFontMetrics(forTextStyle: .body)
+		
+		label.font = fontMetrics.scaledFont(for: .systemFont(ofSize: randomFontSize, weight: randomFontWeight))
 		label.adjustsFontForContentSizeCategory = true
 		stackView.addArrangedSubview(label)
 		

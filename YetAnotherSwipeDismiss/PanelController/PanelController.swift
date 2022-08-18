@@ -381,6 +381,9 @@ extension PanelController: UIGestureRecognizerDelegate {
 	}
 	
 	func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+		guard otherGestureRecognizer == scrollView.panGestureRecognizer else {
+			return false
+		}
 		if isGestureRecognizer(gestureRecognizer, inView: headerView) && scrollView.contentExeedsBounds {
 			// Draggin from headerView should not allow scrolling when content can actually scroll
 			// Disable `otherGestureRecognizer`, so header drag overrules scroll gesture

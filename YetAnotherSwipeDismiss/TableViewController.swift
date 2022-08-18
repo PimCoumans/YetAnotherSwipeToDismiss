@@ -39,13 +39,7 @@ class TableViewController: UIViewController, PanelPresentable {
         return label
     }()
     
-    private lazy var doneButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.title = "Done"
-        let button = UIButton(configuration: configuration)
-        button.addTarget(self, action: #selector(didPressDoneButton), for: .touchUpInside)
-        return button
-    }()
+	private lazy var doneButton: UIButton = compatibleButton(title: "Done", selector: #selector(didPressDoneButton))
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
