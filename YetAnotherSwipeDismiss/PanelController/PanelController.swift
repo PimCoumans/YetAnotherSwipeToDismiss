@@ -115,7 +115,11 @@ class PanelController: NSObject {
 		return recognizer
 	}()
 	
-	private lazy var containerView: UIView = PanelContrainerView()
+	private lazy var containerView: UIView = {
+		let view = PanelContrainerView()
+		view.insetsLayoutMarginsFromSafeArea = false
+		return view
+	}()
 	
 	private lazy var scrollContentView: UIView = {
 		let view = PanelScrollContentView()
@@ -270,8 +274,8 @@ private extension PanelController {
 		}
 		
 		headerShadowView.applyConstraints {
-			$0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
-			$0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+			$0.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor)
+			$0.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor)
 			$0.heightAnchor.constraint(equalToConstant: headerShadowHeight)
 			$0.topAnchor.constraint(equalTo: headerView.bottomAnchor)
 		}
@@ -293,8 +297,8 @@ private extension PanelController {
 		backgroundTopConstraint?.priority = .defaultLow
 		
 		backgroundView.applyConstraints {
-			$0.leadingAnchor.constraint(equalTo: containerView.leadingAnchor)
-			$0.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+			$0.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor)
+			$0.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor)
 			$0.topAnchor.constraint(greaterThanOrEqualTo: containerView.layoutMarginsGuide.topAnchor, constant: -headerViewHeight)
 			
 			$0.bottomAnchor.constraint(equalTo: bottomAnchor, constant: bottomBounceAllowance)
@@ -379,7 +383,10 @@ extension PanelController: UIGestureRecognizerDelegate {
 	func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
 		if isGestureRecognizer(gestureRecognizer, inView: headerView) && scrollView.contentExeedsBounds {
 			// Draggin from headerView should not allow scrolling when content can actually scroll
-			return false
+			// Disable `otherGestureRecognizer`, so header drag overrules scroll gesture
+			otherGestureRecognizer.isEnabled = false
+			otherGestureRecognizer.isEnabled = true
+			return true
 		}
 		return otherGestureRecognizer == scrollView.panGestureRecognizer
 	}
@@ -402,7 +409,7 @@ extension PanelController: UIGestureRecognizerDelegate {
 			}
 			if isGestureInContent {
 				// Drag along with scrollView when content is at top or panel content shouldn‘t scroll
-				return scrollView.isAtTop || !scrollView.contentExeedsBounds
+				return scrollView.isAtTop
 			}
 		}
 		
@@ -433,34 +440,36 @@ extension PanelController: UIGestureRecognizerDelegate {
 		let canDragWithScrollViewBounce = !scrollView.contentExeedsBounds || !startedGestureInHeaderView
 		
 		if recognizerEnded {
+			// How far scrollView is rubber-banding down
+			let scrollOvershoot = max(0, -scrollView.relativeContentOffset.y)
 			scrollView.bounces = true
-			let overshoot = max(0, -scrollView.relativeContentOffset.y)
-			let springVelocity = velocity / -(currentViewTranslation + overshoot)
 			
 			func resetScrollViewBounce() {
-				// Animate back with manual spring bouncing, resetting scrollView offset
+				// Clamp scrollView‘s offset to scrollable range
 				scrollView.stopVerticalScrolling()
-				// Add the scrollView‘s original offset to the transform
-				translateViews(withOffsetTransformer: { $0 + overshoot })
+				// Translate views with scrollView‘s original overshoot
+				translateViews(withOffsetTransformer: { $0 + scrollOvershoot })
 			}
 			
 			if recognizer.state == .ended && velocity > 0 && offset > 0 {
+				// Actually dismiss the panel
 				scrollView.showsVerticalScrollIndicator = false
 				resetScrollViewBounce()
 				animateDismissal(velocity: velocity)
 			} else if currentViewTranslation != 0 {
 				guard scrollView.contentExeedsBounds else {
 					// Bounce back along with scrollView (see `updateScrollView(_:)` for more)
-					let multiplier = currentViewTranslation / -scrollView.relativeContentOffset.y
-					bounceBackScrollViewMultiplier = multiplier
+					bounceBackScrollViewMultiplier = currentViewTranslation / -scrollView.relativeContentOffset.y
 					return
 				}
 				
-				// Animate view bounce back when scrollView won't
+				// Animate view bounce back when scrollView won‘t
+				let bounceBackLength = currentViewTranslation + scrollOvershoot
+				let bounceBackpringVelocity = -(velocity / bounceBackLength)
 				resetScrollViewBounce()
 				UIView.animate(
 					withDuration: 0.6, delay: 0,
-					usingSpringWithDamping: 0.94, initialSpringVelocity: springVelocity,
+					usingSpringWithDamping: 0.94, initialSpringVelocity: bounceBackpringVelocity,
 					options: [.beginFromCurrentState, .allowUserInteraction]
 				) {
 					self.translateViews(withOffset: nil)
@@ -480,7 +489,7 @@ extension PanelController: UIGestureRecognizerDelegate {
 // MARK: - Setting view offset transforms
 private extension PanelController {
 	/// Views that should move when translating along with dismiss gesture or scrollView bounce
-	var viewsToTranslate: [UIView] { [scrollView, headerView, headerShadowView, backgroundView] }
+	var viewsToTranslate: [UIView] { [containerView, backgroundView] }
 	
 	var currentViewTranslation: CGFloat {
 		viewsToTranslate.first!.transform.ty
@@ -553,7 +562,12 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			setupBackgroundViews(in: context.containerView)
 			
 			context.containerView.addSubview(containerView)
-			containerView.extendToSuperview()
+			containerView.applyConstraints {
+				$0.topAnchor.constraint(equalTo: context.containerView.safeAreaLayoutGuide.topAnchor)
+				$0.leadingAnchor.constraint(equalTo: context.containerView.leadingAnchor)
+				$0.trailingAnchor.constraint(equalTo: context.containerView.trailingAnchor)
+				$0.bottomAnchor.constraint(equalTo: context.containerView.bottomAnchor)
+			}
 			ensureViewHierarchy(forceViewLoaded: true)
 			setupViewConstraints()
 			setupBackgroundViewConstraints()
@@ -562,7 +576,8 @@ extension PanelController: UIViewControllerAnimatedTransitioning {
 			context.containerView.layoutIfNeeded()
 		}
 		
-		let fullOffset = min(containerView.bounds.inset(by: containerView.safeAreaInsets).height, scrollView.contentSize.height + headerViewHeight) + containerView.safeAreaInsets.bottom
+		let visibleContainerViewFrame = containerView.bounds.inset(by: containerView.layoutMargins)
+		let fullOffset = min(visibleContainerViewFrame.height, scrollView.contentSize.height + headerViewHeight) + containerView.safeAreaInsets.bottom
 		let fullDuration = transitionDuration(using: context)
 		let duration = max(0.15, fullDuration * ((fullOffset / containerView.bounds.height) * 0.75))
 		
