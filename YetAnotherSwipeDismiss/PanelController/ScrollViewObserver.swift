@@ -11,6 +11,7 @@ class ScrollViewObserver {
 	private var scrollContentSizeObserver: NSKeyValueObservation?
 	private var scrollFrameObserver: NSKeyValueObservation?
 	private var scrollContentOffsetObserver: NSKeyValueObservation?
+	private var safeAreaInsetsObserver: NSKeyValueObservation?
 }
 
 private extension ScrollViewObserver {
@@ -31,6 +32,13 @@ private extension ScrollViewObserver {
 		
 		scrollContentOffsetObserver = scrollView?.observe(\.contentOffset, options: [.old, .new]) { [weak self] scrollView, change in
 			guard change.oldValue != change.newValue else {
+				return
+			}
+			self?.didUpdate?(scrollView)
+		}
+		
+		safeAreaInsetsObserver = scrollView?.observe(\.safeAreaInsets, options: [.old, .new]) { [weak self] scrollView, change in
+			guard change.oldValue?.bottom != change.newValue?.bottom else {
 				return
 			}
 			self?.didUpdate?(scrollView)
