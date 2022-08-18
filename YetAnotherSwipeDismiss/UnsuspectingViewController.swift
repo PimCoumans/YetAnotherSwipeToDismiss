@@ -1,28 +1,21 @@
 //
-//  SimpleViewController.swift
+//  UnsuspectingViewController.swift
 //  YetAnotherSwipeDismiss
 //
-//  Created by Pim on 10/07/2022.
+//  Created by Pim on 15/08/2022.
 //
 
 import UIKit
 
-class SimpleViewController: UIViewController, PanelPresentable {
-	
-	let panelController = PanelController()
+class UnsuspectingViewController: UIViewController {
 	
 	init() {
 		super.init(nibName: nil, bundle: nil)
-		panelController.viewController = self
 	}
 	
 	private lazy var simpleView: UIView = {
 		let view = UIView()
-		if #available(iOS 15.0, *) {
-			view.backgroundColor = .systemMint.withAlphaComponent(0.25)
-		} else {
-			view.backgroundColor = .green.withAlphaComponent(0.25)
-		}
+		view.backgroundColor = .systemRed
 		return view
 	}()
 	
@@ -41,10 +34,12 @@ class SimpleViewController: UIViewController, PanelPresentable {
 		simpleView.extendToSuperview()
 		simpleView.heightAnchor.constraint(equalToConstant: 400).isActive = true
 		
-		headerContentView.addSubview(cancelButton)
-		cancelButton.applyConstraints {
-			$0.leadingAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.leadingAnchor)
-			$0.centerYAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.centerYAnchor)
+		if let headerContentView = presentingPanelController?.headerContentView {
+			headerContentView.addSubview(cancelButton)
+			cancelButton.applyConstraints {
+				$0.leadingAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.leadingAnchor)
+				$0.centerYAnchor.constraint(equalTo: headerContentView.layoutMarginsGuide.centerYAnchor)
+			}
 		}
 	}
 }

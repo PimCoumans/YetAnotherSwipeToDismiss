@@ -1,10 +1,3 @@
-//
-//  UIView+LayoutConvenience.swift
-//  ModelView
-//
-//  Created by Pim on 08/07/2022.
-//
-
 import UIKit
 
 extension NSLayoutConstraint {
@@ -22,18 +15,9 @@ extension NSLayoutConstraint {
 }
 
 extension UIView {
-    
     func applyConstraints(@NSLayoutConstraint.ConstraintBuilder constraints: (UIView) -> [NSLayoutConstraint]) {
         translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate(constraints(self))
-    }
-    
-    func withSuperview(_ handler: (UIView) -> Void) {
-        guard let superview = superview else {
-            print("No superview to constraint to")
-            return
-        }
-        handler(superview)
     }
     
     func extend(to view: UIView) {
@@ -60,23 +44,22 @@ extension UIView {
             centerYAnchor.constraint(equalTo: view.centerYAnchor)
         }
     }
-    
+}
+
+extension UIView {
     func extendToSuperview() {
-        withSuperview { superview in
-            extend(to: superview)
-        }
+        superview.map(extend(to:))
     }
-    
     
     func extendToSuperviewSafeArea() {
-        withSuperview { superview in
-            extend(to: superview.safeAreaLayoutGuide)
-        }
+        superview.map(\.safeAreaLayoutGuide).map(extend(to:))
     }
+	
+	func extendToSuperviewLayoutMargins() {
+		superview.map(\.layoutMarginsGuide).map(extend(to:))
+	}
     
     func centerInSuperview() {
-        withSuperview { superview in
-            center(in: superview)
-        }
+        superview.map(center(in:))
     }
 }
