@@ -69,6 +69,15 @@ class PanelController: NSObject {
 		backgroundView.superview?.layoutIfNeeded()
 	}
 	
+	#warning("MAKE DOCUMENTATION HERE PLEASE")
+	func present(from presentingViewController: UIViewController) {
+		guard let viewController = viewController else {
+			preconditionFailure()
+		}
+
+		presentingViewController.present(viewController, animated: true)
+	}
+	
 	/// Height of view placed above scrollView
 	private let headerViewHeight: CGFloat = 65
 	/// Can be updated from ``viewController``'s protocol method `panelTopInset`

@@ -95,7 +95,8 @@ class ViewController: UIViewController {
 			viewController = UnsuspectingViewController()
 			let panelController = PanelController(backgroundViewEffect: UIBlurEffect(style: .prominent))
 			panelController.viewController = viewController
-			present(viewController, animated: true)
+			return panelController.present(from: self)
+			// Make sure PanelController is still in memory when presenting the view controller
 		case .simple: viewController = SimpleViewController()
 		case .stack: viewController = StackViewController()
 		case .smallTableView: viewController = TableViewController()
