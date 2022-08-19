@@ -149,7 +149,6 @@ private extension StackViewController {
 			self.stackView.arrangedSubviews.forEach { if !$0.isHidden { $0.alpha = 1 } }
 			animation?()
 			self.panelController.layoutIfNeeded()
-			//            self.view.layoutIfNeeded()
 		} completion: { _ in
 			completion?()
 		}
