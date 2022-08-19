@@ -69,7 +69,10 @@ class PanelController: NSObject {
 		backgroundView.superview?.layoutIfNeeded()
 	}
 	
-	#warning("MAKE DOCUMENTATION HERE PLEASE")
+	/// Presents attached view controller
+	/// - Parameter presentingViewController: View controller to present from
+	/// This method is provided as a convenience to present from an externally created `PanelController` (instead of the presented view controller comforming to ``PanelPresentable``.
+	/// Because until the view controller is presented, nothing is retaining the instance of `PanelController`.
 	func present(from presentingViewController: UIViewController) {
 		guard let viewController = viewController else {
 			preconditionFailure()
