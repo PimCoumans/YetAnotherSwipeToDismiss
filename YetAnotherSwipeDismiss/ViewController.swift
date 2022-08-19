@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ConstraintBuilder
 
 extension UIViewController {
 	private func compatibleButton(title: String, isBig: Bool = false) -> UIButton {
